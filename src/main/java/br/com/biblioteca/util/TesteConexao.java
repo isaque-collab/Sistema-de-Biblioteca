@@ -7,11 +7,11 @@ import java.sql.SQLException;
 public class TesteConexao {
     public static void main(String[] args) {
         String url = "jdbc:mysql://localhost:3306/biblioteca";
-        String user = "root";
-        String password = "";
+        String user = "biblioteca";
+        String password = "biblioteca123";
 
         try (Connection conn = DriverManager.getConnection(url, user, password)) {
-            System.out.println("Conecxão feita com sucesso!");
+            System.out.println("Conexão feita com sucesso!");
         }catch (SQLException e){
             System.out.println("Erro ao conectar com o banco de dados! "+e.getMessage());
         }
