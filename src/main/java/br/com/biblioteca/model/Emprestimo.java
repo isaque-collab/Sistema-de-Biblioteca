@@ -1,4 +1,5 @@
 package br.com.biblioteca.model;
+import br.com.biblioteca.enums.StatusEmprestimo;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -17,6 +18,6 @@ public class Emprestimo {
     private LocalDate dataEmprestimo;
     private LocalDate dataPrevistaDevolucao;
     private LocalDate dataDevolucao;
-    private String status;
+    private StatusEmprestimo status;
 
 }
