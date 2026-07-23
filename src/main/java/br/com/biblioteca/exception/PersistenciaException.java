@@ -1,7 +1,12 @@
 package br.com.biblioteca.exception;
 
 public class PersistenciaException extends RuntimeException {
-    public PersistenciaException(String messagem, Throwable causa) {
-        super(messagem, causa);
+
+    public PersistenciaException(String mensagem) {
+        super(mensagem);
+    }
+
+    public PersistenciaException(String mensagem, Throwable causa) {
+        super(mensagem, causa);
     }
 }
