@@ -57,6 +57,7 @@ Tabelas:
 |---|---|---|---|
 | id | INT | PRIMARY KEY, AUTO_INCREMENT | Identificador único do autor |
 | nome | VARCHAR(255) | NOT NULL | Nome do autor |
+| nacionalidade | VARCHAR(60) | NULL | Nacionalidade do autor |
 
 ---
 
