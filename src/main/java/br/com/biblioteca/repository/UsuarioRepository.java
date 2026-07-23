@@ -81,6 +81,24 @@ public class UsuarioRepository {
         }
     }
 
+    public List<Usuario> buscarPorNome(String nome) throws SQLException {
+        try (Connection conn = ConexaoFactory.getInstance().getConexao()) {
+            return buscarPorNome(nome, conn);
+        }
+    }
+
+    public List<Usuario> buscarPorNome(String nome, Connection conn) throws SQLException {
+        String sql = "SELECT * FROM usuario WHERE nome LIKE ?";
+        List<Usuario> usuarios = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + nome + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) usuarios.add(mapear(rs));
+            }
+        }
+        return usuarios;
+    }
+
     public List<Usuario> buscarTodos() throws SQLException{
         try(Connection conn = ConexaoFactory.getInstance().getConexao()){
             return buscarTodos(conn);
