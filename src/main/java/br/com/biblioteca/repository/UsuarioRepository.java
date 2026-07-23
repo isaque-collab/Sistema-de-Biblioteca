@@ -93,7 +93,7 @@ public class UsuarioRepository {
         try(PreparedStatement stmt = conn.prepareStatement(sql);
         ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                Usuario usuario = mapear(rs);
+                usuarios.add(mapear(rs));
             }
         }
         return usuarios;
