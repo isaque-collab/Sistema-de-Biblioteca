@@ -1,12 +1,12 @@
 package br.com.biblioteca.exception;
 
-public class ValidacaoException extends RuntimeException {
+public abstract class ValidacaoException extends RuntimeException {
 
-    public ValidacaoException(String mensagem) {
+    protected ValidacaoException(String mensagem) {
         super(mensagem);
     }
 
-    public ValidacaoException(String mensagem, Throwable causa) {
+    protected ValidacaoException(String mensagem, Throwable causa) {
         super(mensagem, causa);
     }
 }
