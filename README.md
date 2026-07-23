@@ -25,9 +25,15 @@ Sistema de gerencionamento de biblioteca, back-end Java, construído como peça 
 - Testes automatizados com JUnit cobrindo regras de negócio críticas, indo além de testes manuais.
 
 ## O que já foi feito?
-- Modelagem do banco de dados
-- Criado classes model
-- Criada classe enum para representar o status do empréstimo.
+
+- Modelagem do banco de dados.
+- Criação das entidades (`Autor`, `Categoria`, `Livro`, `Usuario` e `Emprestimo`).
+- Implementação do enum `StatusEmprestimo`.
+- Configuração do projeto com Maven, Java 21 e Docker.
+- Implementação da `ConexaoFactory` utilizando o padrão Singleton.
+- Implementação do `UsuarioRepository` com operações de CRUD e consultas por CPF, e-mail e nome.
+- Implementação do `LivroRepository` com operações de CRUD e consulta por ISBN.
+- Criação da hierarquia inicial de exceções customizadas para validação e persistência.
 
 ## Decisões de Projeto
 
@@ -41,9 +47,10 @@ Sistema de gerencionamento de biblioteca, back-end Java, construído como peça 
 
 - O cálculo de multas utiliza Strategy Pattern, permitindo alteração da regra de cálculo sem modificar o restante do sistema.
 
-## Próximo passo:
+## Próximo passo
 
-- Criação dos repositórios de Usuários e Livros
+- Implementação dos repositórios de Autor, Categoria e Empréstimo.
+- Desenvolvimento da camada de Service com as regras de negócio e tratamento das exceções customizadas.
 
 ## Banco de Dados:
 
@@ -137,6 +144,16 @@ O banco utiliza constraints para garantir consistência:
 - **UNIQUE:** impede dados duplicados em campos identificadores.
 - **NOT NULL:** impede campos obrigatórios vazios.
 - **CHECK:** valida regras de negócio simples diretamente no banco.
+
+## Arquitetura
+
+O projeto está sendo desenvolvido utilizando arquitetura em camadas, separando as responsabilidades entre:
+
+- **Model:** entidades da aplicação.
+- **Repository:** acesso aos dados utilizando JDBC.
+- **Service:** regras de negócio, validações e gerenciamento de transações.
+- **Util:** classes utilitárias, como a `ConexaoFactory`.
+- **Exception:** exceções customizadas para representar erros específicos da aplicação.
 ## Tecnologias
 
 - Java 21
