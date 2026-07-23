@@ -1,4 +1,4 @@
-package br.com.biblioteca.service;
+package br.com.biblioteca.validator;
 
 import br.com.biblioteca.exception.EmailInvalidoException;
 
