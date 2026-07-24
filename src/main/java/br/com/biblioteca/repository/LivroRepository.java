@@ -106,7 +106,7 @@ public class LivroRepository {
             int linhasAfetadas = stmt.executeUpdate();
 
             if (linhasAfetadas == 0) {
-                throw new RuntimeException("Autor não encontrado.");
+                throw new RuntimeException("Livro não encontrado.");
             }
         }
     }
@@ -124,7 +124,7 @@ public class LivroRepository {
             int linhasAfetadas = stmt.executeUpdate();
 
             if (linhasAfetadas == 0) {
-                throw new RuntimeException("Autor não encontrado.");
+                throw new RuntimeException("Livro não encontrado.");
             }
         }
     }

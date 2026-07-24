@@ -93,7 +93,7 @@ public class CategoriaRepository {
             int linhasAfetadas = stmt.executeUpdate();
 
             if (linhasAfetadas == 0) {
-                throw new RuntimeException("Autor não encontrado.");
+                throw new RuntimeException("Categoria não encontrada.");
             }
         }
     }
@@ -111,7 +111,7 @@ public class CategoriaRepository {
             int linhasAfetadas = stmt.executeUpdate();
 
             if (linhasAfetadas == 0) {
-                throw new RuntimeException("Autor não encontrado.");
+                throw new RuntimeException("Categoria não encontrada.");
             }
         }
     }

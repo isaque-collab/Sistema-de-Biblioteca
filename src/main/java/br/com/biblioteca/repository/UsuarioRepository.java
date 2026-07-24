@@ -133,7 +133,7 @@ public class UsuarioRepository {
             int linhasAfetadas = stmt.executeUpdate();
 
             if (linhasAfetadas == 0) {
-                throw new RuntimeException("Autor não encontrado.");
+                throw new RuntimeException("Usuário não encontrado.");
             }
         }
     }
@@ -151,7 +151,7 @@ public class UsuarioRepository {
             int linhasAfetadas = stmt.executeUpdate();
 
             if (linhasAfetadas == 0) {
-                throw new RuntimeException("Autor não encontrado.");
+                throw new RuntimeException("Usuário não encontrado.");
             }
         }
     }
