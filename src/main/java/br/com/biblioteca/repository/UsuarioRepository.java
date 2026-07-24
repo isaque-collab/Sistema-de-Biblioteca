@@ -130,7 +130,11 @@ public class UsuarioRepository {
             stmt.setString(2, usuario.getCpf());
             stmt.setString(3, usuario.getEmail());
             stmt.setInt(4, usuario.getId());
-            stmt.executeUpdate();
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas == 0) {
+                throw new RuntimeException("Autor não encontrado.");
+            }
         }
     }
 
@@ -144,7 +148,11 @@ public class UsuarioRepository {
         String sql = "DELETE FROM usuario WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            stmt.executeUpdate();
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas == 0) {
+                throw new RuntimeException("Autor não encontrado.");
+            }
         }
     }
 

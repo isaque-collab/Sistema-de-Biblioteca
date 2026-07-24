@@ -103,7 +103,11 @@ public class LivroRepository {
             stmt.setInt(5, livro.getQuantidadeTotal());
             stmt.setInt(6, livro.getQuantidadeDisponivel());
             stmt.setInt(7, livro.getId());
-            stmt.executeUpdate();
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas == 0) {
+                throw new RuntimeException("Autor não encontrado.");
+            }
         }
     }
 
@@ -117,7 +121,11 @@ public class LivroRepository {
         String sql = "DELETE FROM livro WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            stmt.executeUpdate();
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas == 0) {
+                throw new RuntimeException("Autor não encontrado.");
+            }
         }
     }
 

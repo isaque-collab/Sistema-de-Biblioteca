@@ -90,7 +90,11 @@ public class CategoriaRepository {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, categoria.getNome());
             stmt.setInt(2, categoria.getId());
-            stmt.executeUpdate();
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas == 0) {
+                throw new RuntimeException("Autor não encontrado.");
+            }
         }
     }
 
@@ -104,7 +108,11 @@ public class CategoriaRepository {
         String sql = "DELETE FROM categoria WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            stmt.executeUpdate();
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas == 0) {
+                throw new RuntimeException("Autor não encontrado.");
+            }
         }
     }
 
