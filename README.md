@@ -1,165 +1,411 @@
-# Sistema de Biblioteca (Em andamento)
+# Sistema de Biblioteca (Em desenvolvimento)
 
-Sistema de gerenciamento de biblioteca desenvolvido com Java, JDBC, MySQL e Docker.
+Sistema de gerenciamento de biblioteca desenvolvido em **Java**, utilizando **JDBC**, **MySQL**, **Docker** e arquitetura em camadas.
 
-## Objetivo
+O projeto está sendo desenvolvido como peça de portfólio com o objetivo de aplicar conceitos de desenvolvimento back-end utilizados em aplicações reais, priorizando organização do código, separação de responsabilidades, regras de negócio e boas práticas.
 
-Sistema de gerencionamento de biblioteca, back-end Java, construído como peça de portfólio. O foco é praticar e demonstrar conhecimentos adquiridos durante minha jornada de estudos, destacando:
+---
 
-- Programação Orientada a Objetos(POO)
+# Objetivo
+
+Desenvolver uma aplicação capaz de gerenciar o funcionamento de uma biblioteca, permitindo o controle de usuários, livros e empréstimos através de uma arquitetura organizada e escalável.
+
+Durante o desenvolvimento são praticados conceitos como:
+
+- Programação Orientada a Objetos
 - JDBC
 - SQL
+- MySQL
+- Docker
+- Maven
 - Transações
+- Tratamento de Exceções
 - Padrões de Projeto
 - Streams
-- Boas práticas de arquitetura
-
-## O que pode ser feito?
-
-- Cadastrar e consultar autores, categorias, livros(com controle de estoque por título, e usuários.
-- Registrar empréstimo de livro
-- Registrar devolução, com reposição de estoque na mesma transação.
-- Calcular multa por atraso
-- Gerar relatórios: livros mais emprestados, usuários com empréstimos ativos, estatísticas gerais, e usuários inadimplentes/total de multas/ranking de devedores.
-- Interface via CLI para interação com o sistema.
-- Testes automatizados com JUnit cobrindo regras de negócio críticas, indo além de testes manuais.
-
-## O que já foi feito?
-
-- Modelagem do banco de dados.
-- Criação das entidades (`Autor`, `Categoria`, `Livro`, `Usuario` e `Emprestimo`).
-- Implementação do enum `StatusEmprestimo`.
-- Configuração do projeto com Maven, Java 21 e Docker.
-- Implementação da `ConexaoFactory` utilizando o padrão Singleton.
-- Implementação do `UsuarioRepository` com operações de CRUD e consultas por CPF, e-mail e nome.
-- Implementação do `LivroRepository` com operações de CRUD e consulta por ISBN.
-- Criação da hierarquia inicial de exceções customizadas para validação e persistência.
-
-## Decisões de Projeto
-
-- O controle de estoque é feito por título, utilizando:
-    - quantidade_total
-    - quantidade_disponivel
-
-- As entidades utilizam IDs para representar relacionamentos, evitando acoplamento entre objetos no modelo.
-
-- Regras de negócio complexas ficam na aplicação Java, enquanto o banco fica responsável pela integridade dos dados.
-
-- O cálculo de multas utiliza Strategy Pattern, permitindo alteração da regra de cálculo sem modificar o restante do sistema.
-
-## Próximo passo
-
-- Implementação dos repositórios de Autor, Categoria e Empréstimo.
-- Desenvolvimento da camada de Service com as regras de negócio e tratamento das exceções customizadas.
-
-## Banco de Dados:
-
-O projeto utiliza MySQL via Docker.
-
-Tabelas:
-
-### Autor
-
-| Coluna | Tipo | Constraints | Descrição |
-|---|---|---|---|
-| id | INT | PRIMARY KEY, AUTO_INCREMENT | Identificador único do autor |
-| nome | VARCHAR(255) | NOT NULL | Nome do autor |
-| nacionalidade | VARCHAR(60) | NULL | Nacionalidade do autor |
+- Arquitetura em Camadas
+- Boas práticas de desenvolvimento
 
 ---
 
-### Categoria
+# Funcionalidades
 
-| Coluna | Tipo | Constraints | Descrição |
-|---|---|---|---|
-| id | INT | PRIMARY KEY, AUTO_INCREMENT | Identificador único da categoria |
-| nome | VARCHAR(255) | NOT NULL, UNIQUE | Nome da categoria |
+## Usuários
 
----
+- Cadastro
+- Atualização
+- Consulta por ID
+- Consulta por nome
+- Listagem completa
+- Exclusão
 
-### Usuário
+## Livros
 
-| Coluna | Tipo | Constraints | Descrição |
-|---|---|---|---|
-| id | INT | PRIMARY KEY, AUTO_INCREMENT | Identificador único do usuário |
-| nome | VARCHAR(255) | NOT NULL | Nome completo do usuário |
-| cpf | VARCHAR(14) | NOT NULL, UNIQUE | CPF do usuário |
-| email | VARCHAR(255) | NOT NULL, UNIQUE | E-mail do usuário |
+- Cadastro
+- Atualização
+- Consulta por ID
+- Consulta por ISBN
+- Listagem completa
+- Controle de estoque
+- Exclusão
 
----
+## Empréstimos (em desenvolvimento)
 
-### Livro
+- Registrar empréstimos
+- Registrar devoluções
+- Atualização automática do estoque
+- Controle de multas
+- Histórico de empréstimos
 
-| Coluna | Tipo | Constraints | Descrição |
-|---|---|---|---|
-| id | INT | PRIMARY KEY, AUTO_INCREMENT | Identificador único do livro |
-| titulo | VARCHAR(300) | NOT NULL | Título do livro |
-| isbn | VARCHAR(20) | NOT NULL, UNIQUE | Código ISBN do livro |
-| autor_id | INT | NOT NULL, FOREIGN KEY | Referência ao autor |
-| categoria_id | INT | NOT NULL, FOREIGN KEY | Referência à categoria |
-| quantidade_total | INT | NOT NULL | Quantidade total de exemplares |
-| quantidade_disponivel | INT | NOT NULL | Quantidade disponível para empréstimo |
+## Relatórios (planejado)
 
-**Constraints adicionais:**
-
-- `fk_livro_autor` → garante que o autor informado exista.
-- `fk_livro_categoria` → garante que a categoria informada exista.
-- `chk_livro_estoque` → impede estoque negativo ou disponibilidade maior que a quantidade total.
-
-Regra:
-quantidade_disponivel >= 0
-quantidade_disponivel <= quantidade_total
-
-
-### Empréstimo
-
-| Coluna | Tipo | Constraints | Descrição |
-|---|---|---|---|
-| id | INT | PRIMARY KEY, AUTO_INCREMENT | Identificador único do empréstimo |
-| usuario_id | INT | NOT NULL, FOREIGN KEY | Usuário responsável pelo empréstimo |
-| livro_id | INT | NOT NULL, FOREIGN KEY | Livro emprestado |
-| data_emprestimo | DATE | NOT NULL | Data em que o empréstimo foi realizado |
-| data_prevista_devolucao | DATE | NOT NULL | Data limite para devolução |
-| data_devolucao | DATE | NULL | Data real de devolução |
-| status | VARCHAR(20) | NOT NULL, CHECK | Estado atual do empréstimo |
-
-Valores permitidos para `status`: ATIVO, DEVOLVIDO
-
-
-**Constraints adicionais:**
-
-- `fk_emprestimo_usuario` → garante que o usuário exista.
-- `fk_emprestimo_livro` → garante que o livro exista.
-- `chk_emprestimo_status` → impede status inválidos.
-- `chk_datas` → garante que a data prevista seja posterior à data de empréstimo.
+- Livros mais emprestados
+- Usuários com empréstimos ativos
+- Usuários inadimplentes
+- Ranking de devedores
+- Total arrecadado em multas
+- Estatísticas gerais
 
 ---
 
-## Integridade do Banco
-
-O banco utiliza constraints para garantir consistência:
-
-- **PRIMARY KEY:** garante identificadores únicos.
-- **FOREIGN KEY:** mantém integridade entre tabelas relacionadas.
-- **UNIQUE:** impede dados duplicados em campos identificadores.
-- **NOT NULL:** impede campos obrigatórios vazios.
-- **CHECK:** valida regras de negócio simples diretamente no banco.
-
-## Arquitetura
-
-O projeto está sendo desenvolvido utilizando arquitetura em camadas, separando as responsabilidades entre:
-
-- **Model:** entidades da aplicação.
-- **Repository:** acesso aos dados utilizando JDBC.
-- **Service:** regras de negócio, validações e gerenciamento de transações.
-- **Util:** classes utilitárias, como a `ConexaoFactory`.
-- **Exception:** exceções customizadas para representar erros específicos da aplicação.
-## Tecnologias
+# Tecnologias
 
 - Java 21
 - Maven
-- Lombok
+- JDBC
 - MySQL 8.4
 - Docker
-- JDBC
+- Lombok
+- Log4j2
+- JUnit (planejado)
 
+---
+
+# Arquitetura
+
+O projeto segue uma arquitetura em camadas.
+
+```
+CLI
+        │
+        ▼
+Service
+        │
+        ▼
+Repository
+        │
+        ▼
+MySQL
+```
+
+Cada camada possui uma responsabilidade específica.
+
+| Camada | Responsabilidade |
+|---------|------------------|
+| Model | Representação das entidades |
+| Repository | Comunicação com o banco utilizando JDBC |
+| Service | Regras de negócio, validações e tratamento de exceções |
+| Validator | Validação e normalização dos dados de entrada |
+| Exception | Exceções específicas da aplicação |
+| Util | Classes utilitárias (ConexaoFactory, etc.) |
+
+---
+
+# Fluxo da aplicação
+
+Toda operação da aplicação segue o mesmo fluxo.
+
+```
+Entrada do usuário (CLI)
+
+↓
+
+Service
+
+↓
+
+Validação dos dados
+
+↓
+
+Aplicação das regras de negócio
+
+↓
+
+Repository
+
+↓
+
+Banco de Dados
+
+↓
+
+Tratamento de exceções
+
+↓
+
+Retorno ao usuário
+```
+
+Dessa forma a camada de apresentação permanece desacoplada das regras de negócio e do acesso ao banco.
+
+---
+
+# Fluxo das principais operações
+
+## Cadastro de usuário
+
+### Entrada
+
+Recebe um objeto `Usuario`.
+
+### Processamento
+
+1. O CPF é validado e normalizado.
+2. O e-mail é validado e normalizado.
+3. É realizada consulta para verificar duplicidade de CPF.
+4. É realizada consulta para verificar duplicidade de e-mail.
+5. O usuário é persistido utilizando o `UsuarioRepository`.
+6. Caso ocorra violação de constraint UNIQUE, ela é traduzida para uma exceção de domínio.
+
+### Saída
+
+Retorna o usuário cadastrado.
+
+### Possíveis exceções
+
+- CpfInvalidoException
+- EmailInvalidoException
+- CpfJaCadastradoException
+- EmailJaCadastradoException
+- PersistenciaException
+
+---
+
+## Atualização de usuário
+
+### Entrada
+
+Recebe um objeto `Usuario`.
+
+### Processamento
+
+1. Verifica se o usuário existe.
+2. Valida CPF.
+3. Valida e-mail.
+4. Verifica duplicidade de CPF.
+5. Verifica duplicidade de e-mail.
+6. Atualiza o registro.
+
+### Saída
+
+Retorna o usuário atualizado.
+
+---
+
+## Exclusão de usuário
+
+### Entrada
+
+Recebe o ID do usuário.
+
+### Processamento
+
+1. Verifica se o usuário existe.
+2. Solicita a exclusão ao Repository.
+3. Caso existam empréstimos vinculados, uma exceção específica é lançada.
+
+### Saída
+
+Sem retorno.
+
+---
+
+## Cadastro de livro
+
+### Entrada
+
+Recebe um objeto `Livro`.
+
+### Processamento
+
+1. O ISBN é validado (ISBN-10 ou ISBN-13).
+2. A quantidade total é validada.
+3. A quantidade disponível é inicializada com a quantidade total.
+4. Verifica duplicidade de ISBN.
+5. Persiste o livro.
+6. Traduz violações de UNIQUE para exceções específicas.
+
+### Saída
+
+Retorna o livro cadastrado.
+
+---
+
+## Atualização de livro
+
+### Entrada
+
+Recebe um objeto `Livro`.
+
+### Processamento
+
+1. Verifica existência do livro.
+2. Valida ISBN.
+3. Valida quantidade.
+4. Verifica duplicidade de ISBN.
+5. Atualiza o registro.
+
+### Saída
+
+Retorna o livro atualizado.
+
+---
+
+## Exclusão de livro
+
+### Entrada
+
+Recebe o ID do livro.
+
+### Processamento
+
+1. Verifica se o livro existe.
+2. Solicita a exclusão ao Repository.
+3. Caso existam empréstimos vinculados, lança uma exceção específica.
+
+### Saída
+
+Sem retorno.
+
+---
+
+# Validações implementadas
+
+## Usuário
+
+- Validação de CPF com cálculo dos dígitos verificadores.
+- Normalização do CPF.
+- Validação de e-mail.
+- Verificação de duplicidade de CPF.
+- Verificação de duplicidade de e-mail.
+
+## Livro
+
+- Validação de ISBN-10.
+- Validação de ISBN-13.
+- Normalização do ISBN.
+- Verificação de duplicidade de ISBN.
+- Validação da quantidade total de exemplares.
+
+---
+
+# O que já foi implementado
+
+## Banco de Dados
+
+- Modelagem relacional completa.
+- Constraints de integridade.
+- Chaves primárias.
+- Chaves estrangeiras.
+- Constraints UNIQUE.
+- Constraints CHECK.
+
+## Camada Model
+
+- Autor
+- Categoria
+- Livro
+- Usuario
+- Emprestimo
+- StatusEmprestimo
+
+## Camada Repository
+
+### UsuarioRepository
+
+- CRUD completo
+- Consulta por CPF
+- Consulta por e-mail
+- Consulta por nome
+
+### LivroRepository
+
+- CRUD completo
+- Consulta por ISBN
+
+## Camada Service
+
+### UsuarioService
+
+- Cadastro
+- Atualização
+- Exclusão
+- Consultas
+- Validações
+- Tratamento de exceções
+- Tradução de constraints UNIQUE
+
+### LivroService
+
+- Cadastro
+- Atualização
+- Exclusão
+- Consultas
+- Controle inicial de estoque
+- Validação de ISBN
+- Tratamento de exceções
+- Tradução de constraints UNIQUE
+
+## Validator
+
+- CpfValidator
+- EmailValidator
+- IsbnValidator
+
+## Exception
+
+Hierarquia inicial de exceções de domínio e persistência.
+
+---
+
+# Decisões de Projeto
+
+- O controle de estoque é realizado por título utilizando `quantidade_total` e `quantidade_disponivel`.
+- As entidades se relacionam através de IDs, reduzindo o acoplamento entre objetos.
+- As regras de negócio permanecem na camada Service.
+- O banco de dados é responsável pela integridade referencial e pelas constraints.
+- Violações de constraints do banco são traduzidas para exceções específicas da aplicação.
+- O cálculo de multas utilizará o Strategy Pattern para permitir alteração da regra de cálculo sem impacto no restante da aplicação.
+- O `IsbnValidator` valida ISBN-10 e ISBN-13, porém não realiza conversão entre os formatos, decisão adotada para manter o escopo da primeira versão do projeto.
+
+---
+
+# Estrutura do Projeto
+
+```
+src
+└── main
+    └── java
+        └── br.com.biblioteca
+            ├── model
+            ├── repository
+            ├── service
+            ├── validator
+            ├── exception
+            ├── util
+            └── enums
+```
+
+---
+
+# Próximas etapas
+
+- Implementar `AutorRepository`.
+- Implementar `CategoriaRepository`.
+- Implementar `EmprestimoRepository`.
+- Desenvolver os respectivos Services.
+- Implementar gerenciamento de empréstimos.
+- Implementar transações JDBC.
+- Desenvolver cálculo de multas utilizando Strategy Pattern.
+- Criar interface CLI.
+- Desenvolver testes automatizados com JUnit.
