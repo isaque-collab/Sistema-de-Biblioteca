@@ -46,20 +46,22 @@ public class AutorRepository {
         }
     }
 
-    public Optional<Autor> buscarPorNome(String nome) throws SQLException {
+    public List<Autor> buscarPorNome(String nome) throws SQLException {
         try (Connection conn = ConexaoFactory.getInstance().getConexao()) {
             return buscarPorNome(nome, conn);
         }
     }
 
-    public Optional<Autor> buscarPorNome(String nome, Connection conn) throws SQLException {
-        String sql = "SELECT * FROM autor WHERE nome = ?";
+    public List<Autor> buscarPorNome(String nome, Connection conn) throws SQLException {
+        String sql = "SELECT * FROM autor WHERE nome LIKE ?";
+        List<Autor> autores = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, nome);
+            stmt.setString(1, "%" + nome + "%");
             try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next() ? Optional.of(mapear(rs)) : Optional.empty();
+                while (rs.next()) autores.add(mapear(rs));
             }
         }
+        return autores;
     }
 
     public List<Autor> buscarTodos() throws SQLException {
@@ -69,7 +71,7 @@ public class AutorRepository {
     }
 
     public List<Autor> buscarTodos(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM autor ORDER BY nome";
+        String sql = "SELECT * FROM autor";
         List<Autor> autores = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
