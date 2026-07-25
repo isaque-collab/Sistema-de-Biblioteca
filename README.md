@@ -2,13 +2,13 @@
 
 Sistema de gerenciamento de biblioteca desenvolvido em **Java**, utilizando **JDBC**, **MySQL**, **Docker** e arquitetura em camadas.
 
-O projeto está sendo desenvolvido como peça de portfólio com o objetivo de aplicar conceitos de desenvolvimento back-end utilizados em aplicações reais, priorizando organização do código, separação de responsabilidades, regras de negócio e boas práticas.
+O projeto está sendo desenvolvido como peça de portfólio com o objetivo de aplicar conceitos utilizados no desenvolvimento back-end de aplicações reais, priorizando organização do código, separação de responsabilidades, regras de negócio, tratamento de exceções e boas práticas de programação.
 
 ---
 
 # Objetivo
 
-Desenvolver uma aplicação capaz de gerenciar o funcionamento de uma biblioteca, permitindo o controle de usuários, livros e empréstimos através de uma arquitetura organizada e escalável.
+Desenvolver uma aplicação capaz de gerenciar o funcionamento de uma biblioteca, permitindo o controle de usuários, autores, categorias, livros e empréstimos através de uma arquitetura organizada, desacoplada e escalável.
 
 Durante o desenvolvimento são praticados conceitos como:
 
@@ -16,8 +16,6 @@ Durante o desenvolvimento são praticados conceitos como:
 - JDBC
 - SQL
 - MySQL
-- Docker
-- Maven
 - Transações
 - Tratamento de Exceções
 - Padrões de Projeto
@@ -30,6 +28,24 @@ Durante o desenvolvimento são praticados conceitos como:
 # Funcionalidades
 
 ## Usuários
+
+- Cadastro
+- Atualização
+- Consulta por ID
+- Consulta por nome
+- Listagem completa
+- Exclusão
+
+## Autores
+
+- Cadastro
+- Atualização
+- Consulta por ID
+- Consulta por nome
+- Listagem completa
+- Exclusão
+
+## Categorias
 
 - Cadastro
 - Atualização
@@ -73,6 +89,7 @@ Durante o desenvolvimento são praticados conceitos como:
 - Maven
 - JDBC
 - MySQL 8.4
+- SQL (DDL)
 - Docker
 - Lombok
 - Log4j2
@@ -104,7 +121,7 @@ Cada camada possui uma responsabilidade específica.
 | Model | Representação das entidades |
 | Repository | Comunicação com o banco utilizando JDBC |
 | Service | Regras de negócio, validações e tratamento de exceções |
-| Validator | Validação e normalização dos dados de entrada |
+| Validator | Validação e normalização dos dados |
 | Exception | Exceções específicas da aplicação |
 | Util | Classes utilitárias (ConexaoFactory, etc.) |
 
@@ -112,7 +129,7 @@ Cada camada possui uma responsabilidade específica.
 
 # Fluxo da aplicação
 
-Toda operação da aplicação segue o mesmo fluxo.
+Toda operação segue o mesmo fluxo.
 
 ```
 Entrada do usuário (CLI)
@@ -154,10 +171,6 @@ Dessa forma a camada de apresentação permanece desacoplada das regras de negó
 
 ## Cadastro de usuário
 
-### Entrada
-
-Recebe um objeto `Usuario`.
-
 ### Processamento
 
 1. O CPF é validado e normalizado.
@@ -165,7 +178,7 @@ Recebe um objeto `Usuario`.
 3. É realizada consulta para verificar duplicidade de CPF.
 4. É realizada consulta para verificar duplicidade de e-mail.
 5. O usuário é persistido utilizando o `UsuarioRepository`.
-6. Caso ocorra violação de constraint UNIQUE, ela é traduzida para uma exceção de domínio.
+6. Violações de constraints UNIQUE são traduzidas para exceções específicas.
 
 ### Saída
 
@@ -181,50 +194,38 @@ Retorna o usuário cadastrado.
 
 ---
 
-## Atualização de usuário
-
-### Entrada
-
-Recebe um objeto `Usuario`.
+## Cadastro de autor
 
 ### Processamento
 
-1. Verifica se o usuário existe.
-2. Valida CPF.
-3. Valida e-mail.
-4. Verifica duplicidade de CPF.
-5. Verifica duplicidade de e-mail.
-6. Atualiza o registro.
+1. Valida o nome do autor.
+2. Normaliza os dados.
+3. Persiste o autor.
+4. Traduz erros de persistência para exceções da aplicação.
 
 ### Saída
 
-Retorna o usuário atualizado.
+Retorna o autor cadastrado.
 
 ---
 
-## Exclusão de usuário
-
-### Entrada
-
-Recebe o ID do usuário.
+## Cadastro de categoria
 
 ### Processamento
 
-1. Verifica se o usuário existe.
-2. Solicita a exclusão ao Repository.
-3. Caso existam empréstimos vinculados, uma exceção específica é lançada.
+1. Valida o nome da categoria.
+2. Normaliza os dados.
+3. Verifica duplicidade.
+4. Persiste a categoria.
+5. Traduz violações de UNIQUE para exceções específicas.
 
 ### Saída
 
-Sem retorno.
+Retorna a categoria cadastrada.
 
 ---
 
 ## Cadastro de livro
-
-### Entrada
-
-Recebe um objeto `Livro`.
 
 ### Processamento
 
@@ -238,44 +239,6 @@ Recebe um objeto `Livro`.
 ### Saída
 
 Retorna o livro cadastrado.
-
----
-
-## Atualização de livro
-
-### Entrada
-
-Recebe um objeto `Livro`.
-
-### Processamento
-
-1. Verifica existência do livro.
-2. Valida ISBN.
-3. Valida quantidade.
-4. Verifica duplicidade de ISBN.
-5. Atualiza o registro.
-
-### Saída
-
-Retorna o livro atualizado.
-
----
-
-## Exclusão de livro
-
-### Entrada
-
-Recebe o ID do livro.
-
-### Processamento
-
-1. Verifica se o livro existe.
-2. Solicita a exclusão ao Repository.
-3. Caso existam empréstimos vinculados, lança uma exceção específica.
-
-### Saída
-
-Sem retorno.
 
 ---
 
@@ -297,6 +260,17 @@ Sem retorno.
 - Verificação de duplicidade de ISBN.
 - Validação da quantidade total de exemplares.
 
+## Autor
+
+- Nome obrigatório.
+- Remoção de espaços excedentes.
+
+## Categoria
+
+- Nome obrigatório.
+- Remoção de espaços excedentes.
+- Verificação de duplicidade.
+
 ---
 
 # O que já foi implementado
@@ -304,11 +278,12 @@ Sem retorno.
 ## Banco de Dados
 
 - Modelagem relacional completa.
-- Constraints de integridade.
+- Script versionado (`database/schema.sql`).
 - Chaves primárias.
 - Chaves estrangeiras.
 - Constraints UNIQUE.
 - Constraints CHECK.
+- Integridade referencial.
 
 ## Camada Model
 
@@ -333,6 +308,20 @@ Sem retorno.
 - CRUD completo
 - Consulta por ISBN
 
+### AutorRepository
+
+- CRUD completo
+- Consulta por ID
+- Consulta por nome
+- Listagem completa
+
+### CategoriaRepository
+
+- CRUD completo
+- Consulta por ID
+- Consulta por nome
+- Listagem completa
+
 ## Camada Service
 
 ### UsuarioService
@@ -356,15 +345,59 @@ Sem retorno.
 - Tratamento de exceções
 - Tradução de constraints UNIQUE
 
+### AutorService
+
+- Cadastro
+- Atualização
+- Exclusão
+- Consultas
+- Validação dos dados
+- Tratamento de exceções
+
+### CategoriaService
+
+- Cadastro
+- Atualização
+- Exclusão
+- Consultas
+- Validação dos dados
+- Verificação de duplicidade
+- Tratamento de exceções
+- Tradução de constraints UNIQUE
+
 ## Validator
 
 - CpfValidator
 - EmailValidator
 - IsbnValidator
+- NomeValidator
 
 ## Exception
 
-Hierarquia inicial de exceções de domínio e persistência.
+Hierarquia de exceções específicas para validação, persistência e regras de negócio.
+
+---
+
+# Banco de Dados
+
+O projeto possui um script SQL versionado localizado em:
+
+```
+database/
+└── schema.sql
+```
+
+O script cria automaticamente:
+
+- Banco de dados;
+- Tabelas;
+- Chaves primárias;
+- Chaves estrangeiras;
+- Constraints UNIQUE;
+- Constraints CHECK;
+- Regras de integridade.
+
+Isso permite recriar todo o banco de dados apenas executando um único arquivo SQL.
 
 ---
 
@@ -372,17 +405,20 @@ Hierarquia inicial de exceções de domínio e persistência.
 
 - O controle de estoque é realizado por título utilizando `quantidade_total` e `quantidade_disponivel`.
 - As entidades se relacionam através de IDs, reduzindo o acoplamento entre objetos.
-- As regras de negócio permanecem na camada Service.
+- As regras de negócio permanecem concentradas na camada Service.
 - O banco de dados é responsável pela integridade referencial e pelas constraints.
 - Violações de constraints do banco são traduzidas para exceções específicas da aplicação.
-- O cálculo de multas utilizará o Strategy Pattern para permitir alteração da regra de cálculo sem impacto no restante da aplicação.
-- O `IsbnValidator` valida ISBN-10 e ISBN-13, porém não realiza conversão entre os formatos, decisão adotada para manter o escopo da primeira versão do projeto.
+- O cálculo de multas será implementado utilizando o Strategy Pattern.
+- O `IsbnValidator` valida ISBN-10 e ISBN-13, porém não realiza conversão entre os formatos para manter o escopo da primeira versão do projeto.
 
 ---
 
 # Estrutura do Projeto
 
 ```
+database
+└── schema.sql
+
 src
 └── main
     └── java
@@ -400,12 +436,16 @@ src
 
 # Próximas etapas
 
-- Implementar `AutorRepository`.
-- Implementar `CategoriaRepository`.
 - Implementar `EmprestimoRepository`.
-- Desenvolver os respectivos Services.
-- Implementar gerenciamento de empréstimos.
+- Implementar `EmprestimoService`.
+- Desenvolver o gerenciamento de empréstimos.
 - Implementar transações JDBC.
-- Desenvolver cálculo de multas utilizando Strategy Pattern.
+- Desenvolver o cálculo de multas utilizando Strategy Pattern.
 - Criar interface CLI.
 - Desenvolver testes automatizados com JUnit.
+
+---
+
+# Autor
+
+Desenvolvido por **Isaque Costa da Cunha** como projeto de portfólio para aprofundamento em desenvolvimento Back-end com Java.
