@@ -45,13 +45,13 @@ public class CategoriaRepository {
         }
     }
 
-    public Optional<Categoria> buscarPorNome(String nome) throws SQLException {
+    public Optional<Categoria> buscarPorNomeExato(String nome) throws SQLException {
         try (Connection conn = ConexaoFactory.getInstance().getConexao()) {
-            return buscarPorNome(nome, conn);
+            return buscarPorNomeExato(nome, conn);
         }
     }
 
-    public Optional<Categoria> buscarPorNome(String nome, Connection conn) throws SQLException {
+    public Optional<Categoria> buscarPorNomeExato(String nome, Connection conn) throws SQLException {
         String sql = "SELECT * FROM categoria WHERE nome = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, nome);
@@ -68,7 +68,7 @@ public class CategoriaRepository {
     }
 
     public List<Categoria> buscarTodas(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM categoria ORDER BY nome";
+        String sql = "SELECT * FROM categoria";
         List<Categoria> categorias = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
