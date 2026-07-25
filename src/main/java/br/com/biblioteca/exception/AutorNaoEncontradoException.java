@@ -1,7 +1,7 @@
 package br.com.biblioteca.exception;
 
-public class AutorNaoEncontradoException extends RuntimeException {
-  public AutorNaoEncontradoException(String message) {
-    super(message);
-  }
+public class AutorNaoEncontradoException extends RegistroNaoEncontradoException {
+    public AutorNaoEncontradoException(int id) {
+        super("Autor não encontrado, id: "+ id);
+    }
 }
