@@ -1,4 +1,4 @@
-package br.com.biblioteca;
+package br.com.biblioteca.manual;
 
 import br.com.biblioteca.exception.EstoqueIndisponivelException;
 import br.com.biblioteca.model.*;
