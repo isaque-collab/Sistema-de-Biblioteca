@@ -66,11 +66,15 @@ Durante o desenvolvimento são praticados conceitos como:
 
 ## Empréstimos (em desenvolvimento)
 
-- Registrar empréstimos
-- Registrar devoluções
+- Registro de empréstimos
+- Controle transacional utilizando JDBC
 - Atualização automática do estoque
-- Controle de multas
-- Histórico de empréstimos
+- Controle de concorrência para evitar empréstimos simultâneos do último exemplar
+- Consulta por ID
+- Listagem completa
+- Registro de devoluções (planejado)
+- Controle de multas (planejado)
+- Histórico de empréstimos (planejado)
 
 ## Relatórios (planejado)
 
@@ -93,7 +97,7 @@ Durante o desenvolvimento são praticados conceitos como:
 - Docker
 - Lombok
 - Log4j2
-- JUnit (planejado)
+- JUnit 5 (planejado)
 
 ---
 
@@ -240,6 +244,29 @@ Retorna a categoria cadastrada.
 
 Retorna o livro cadastrado.
 
+## Registro de empréstimo
+
+### Processamento
+
+1. Verifica se o usuário existe.
+2. Verifica se o livro existe.
+3. Inicia uma transação JDBC.
+4. Realiza uma atualização atômica do estoque.
+5. Caso exista disponibilidade, registra o empréstimo.
+6. Confirma a transação (`commit`).
+7. Em caso de falha, desfaz todas as alterações (`rollback`).
+
+### Saída
+
+Retorna o empréstimo registrado.
+
+### Possíveis exceções
+
+- UsuarioNaoEncontradoException
+- LivroNaoEncontradoException
+- EstoqueIndisponivelException
+- PersistenciaException
+
 ---
 
 # Validações implementadas
@@ -322,6 +349,13 @@ Retorna o livro cadastrado.
 - Consulta por nome
 - Listagem completa
 
+### EmprestimoRepository
+
+- Cadastro de empréstimos
+- Consulta por ID
+- Listagem completa
+- Suporte a transações compartilhando a mesma `Connection`
+
 ## Camada Service
 
 ### UsuarioService
@@ -365,6 +399,14 @@ Retorna o livro cadastrado.
 - Tratamento de exceções
 - Tradução de constraints UNIQUE
 
+### EmprestimoService
+
+- Registro de empréstimos
+- Controle de transações JDBC
+- Atualização automática do estoque
+- Controle de concorrência
+- Tratamento de exceções
+
 ## Validator
 
 - CpfValidator
@@ -375,6 +417,29 @@ Retorna o livro cadastrado.
 ## Exception
 
 Hierarquia de exceções específicas para validação, persistência e regras de negócio.
+
+## Logging
+
+A aplicação utiliza **Log4j2** para registro de eventos e erros da camada de serviço.
+
+Atualmente está configurado para:
+
+- Logs da aplicação em nível **INFO**
+- Logs das bibliotecas externas em nível **WARN**
+- Saída formatada no console
+
+## Testes
+
+Foi desenvolvido um teste manual de concorrência para validar o comportamento das transações durante o registro de empréstimos.
+
+O teste simula duas threads tentando emprestar simultaneamente o último exemplar de um mesmo livro.
+
+Resultado esperado:
+
+- Apenas um empréstimo é registrado.
+- A segunda tentativa recebe `EstoqueIndisponivelException`.
+- O estoque permanece consistente.
+- Não ocorre condição de corrida (Race Condition).
 
 ---
 
@@ -410,39 +475,46 @@ Isso permite recriar todo o banco de dados apenas executando um único arquivo S
 - Violações de constraints do banco são traduzidas para exceções específicas da aplicação.
 - O cálculo de multas será implementado utilizando o Strategy Pattern.
 - O `IsbnValidator` valida ISBN-10 e ISBN-13, porém não realiza conversão entre os formatos para manter o escopo da primeira versão do projeto.
+- O controle de concorrência no empréstimo é realizado através de uma atualização atômica do estoque, garantindo consistência mesmo com acessos simultâneos.
 
 ---
 
 # Estrutura do Projeto
 
-```
+```text
 database
 └── schema.sql
 
 src
-└── main
+├── main
+│   ├── java
+│   │   └── br.com.biblioteca
+│   │       ├── app
+│   │       ├── config
+│   │       ├── database
+│   │       ├── enums
+│   │       ├── exception
+│   │       ├── model
+│   │       ├── repository
+│   │       ├── service
+│   │       ├── util
+│   │       └── validator
+│   └── resources
+└── test
     └── java
         └── br.com.biblioteca
-            ├── model
-            ├── repository
-            ├── service
-            ├── validator
-            ├── exception
-            ├── util
-            └── enums
+            └── manual
 ```
 
 ---
 
 # Próximas etapas
 
-- Implementar `EmprestimoRepository`.
-- Implementar `EmprestimoService`.
-- Desenvolver o gerenciamento de empréstimos.
-- Implementar transações JDBC.
+- Implementar devolução de livros.
 - Desenvolver o cálculo de multas utilizando Strategy Pattern.
-- Criar interface CLI.
-- Desenvolver testes automatizados com JUnit.
+- Criar relatórios da biblioteca.
+- Desenvolver interface CLI.
+- Implementar testes automatizados com JUnit 5.
 
 ---
 
