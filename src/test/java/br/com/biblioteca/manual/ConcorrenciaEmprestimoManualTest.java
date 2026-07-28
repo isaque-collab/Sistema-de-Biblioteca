@@ -1,5 +1,6 @@
 package br.com.biblioteca.manual;
 
+import br.com.biblioteca.exception.EmprestimoJaDevolvidoException;
 import br.com.biblioteca.exception.EstoqueIndisponivelException;
 import br.com.biblioteca.model.*;
 import br.com.biblioteca.repository.*;
@@ -41,30 +42,25 @@ public class ConcorrenciaEmprestimoManualTest {
 
         Livro livro = livroService.cadastrar(
                 Livro.builder()
-                        .titulo("Livro Disputado")
+                        .titulo("Livro Para Devolver")
                         .isbn(isbnAleatorioValido())
                         .autorId(autor.getId())
                         .categoriaId(categoria.getId())
                         .quantidadeTotal(1)
                         .build());
 
-        System.out.println("Livro criado id=" + livro.getId() + " quantidade_disponível=1");
-
-        Usuario usuario1 = usuarioService.cadastrar(
+        Usuario usuario = usuarioService.cadastrar(
                 Usuario.builder()
-                        .nome("Usuario UM")
+                        .nome("Usuario Devolução")
                         .cpf(cpfValidoAleatorio())
-                        .email("usuario1." + System.nanoTime() + "@teste.com")
+                        .email("usuario.devolucao" + System.nanoTime() + "@teste.com")
                         .build());
 
-        Usuario usuario2 = usuarioService.cadastrar(
-                Usuario.builder()
-                        .nome("Usuario Dois")
-                        .cpf(cpfValidoAleatorio())
-                        .email("usuario2." + System.nanoTime() + "@teste.com")
-                        .build());
+        Emprestimo emprestimo = emprestimoService.emprestar(
+                usuario.getId(), livro.getId(), LocalDate.now().plusDays(7));
 
-        System.out.println("Usuário1 id=" + usuario1.getId() + " | Usuário2 id=" + usuario2.getId());
+        System.out.println("Empréstimo criado id=" + emprestimo.getId()
+        + " | quantidade_disponivel após empréstimo deve ser 0");
 
         CountDownLatch largada = new CountDownLatch(1);
         CountDownLatch chegada = new CountDownLatch(2);
@@ -72,36 +68,35 @@ public class ConcorrenciaEmprestimoManualTest {
         AtomicReference<String> resultado1  = new AtomicReference<>();
         AtomicReference<String> resultado2 = new AtomicReference<>();
 
-        LocalDate prazo = LocalDate.now().plusDays(7);
-
         Thread t1 = new Thread(() -> {
             try {
                 largada.await();
-                Emprestimo e = emprestimoService.emprestar(usuario1.getId(), livro.getId(), prazo);
-
-                resultado1.set("SUCESSO - emprestimo id=" + e.getId());
-            }catch (EstoqueIndisponivelException e){
-                resultado1.set("BLOQUEADO - EstoqueIndisponivelException: " + e.getMessage());
+                Emprestimo devolvido = emprestimoService.devolver(emprestimo.getId());
+                resultado1.set("SUCESSO - status=" + devolvido.getStatus()
+                + " dataDevolucao=" + devolvido.getDataDevolucao());
+            }catch (EmprestimoJaDevolvidoException e){
+                resultado1.set("BLOQUEADO - EmprestimoJaDevolvidoException: " + e.getMessage());
             }catch (Exception e){
                 resultado1.set("ERRO INESPERADO - " + e);
             } finally {
                 chegada.countDown();
             }
-        }, "thread-usuario-1");
+        }, "thread-devolucao-1");
 
         Thread t2 = new Thread(() -> {
             try {
                 largada.await();
-                Emprestimo e =  emprestimoService.emprestar(usuario2.getId(), livro.getId(), prazo);
-                resultado2.set("SUCESSO - emprestimo id=" + e.getId());
-            }catch (EstoqueIndisponivelException e){
-                resultado2.set("BLOQUEADO - EstoqueIndisponivelException: " + e.getMessage());
+                Emprestimo devolvido =  emprestimoService.devolver(emprestimo.getId());
+                resultado2.set("SUCESSO - status=" + devolvido.getStatus()
+                + " dataDevolucao=" + devolvido.getDataDevolucao());
+            }catch (EmprestimoJaDevolvidoException e){
+                resultado2.set("BLOQUEADO - EmprestimoJaDevolvidoException: " + e.getMessage());
             }catch (Exception e){
                 resultado2.set("ERRO INESPERADO - " + e);
             }finally {
                 chegada.countDown();
             }
-        }, "thread-usuario-2");
+        }, "thread-devolucao-2");
 
         t1.start();
         t2.start();
@@ -116,6 +111,10 @@ public class ConcorrenciaEmprestimoManualTest {
             System.out.println("ATENÇÃO: uma das threads não terminou em 15s - possível deadlock/lock esperando.");
         }
 
+        boolean exatamenteUmSucesso = (resultado1.get().startsWith("SUCESSO")) != (resultado2.get().startsWith("SUCESSO"));
+        System.out.println(exatamenteUmSucesso ? "OK - exatamente uma thread teve sucesso."
+                : "SUSPEITO - as duas tiveram o mesmo desfecho (deveria ser 1 sucesso + 1 bloqueio).");
+
         try(Connection conn = ConexaoFactory.getInstance().getConexao();
             PreparedStatement stmt = conn.prepareStatement("SELECT quantidade_disponivel FROM livro WHERE id = ?")){
             stmt.setInt(1, livro.getId());
@@ -123,25 +122,26 @@ public class ConcorrenciaEmprestimoManualTest {
                 rs.next();
                 int quantidadeFinal = rs.getInt(1);
                 System.out.println("quantidade_disponivel final no banco: " + quantidadeFinal);
-                if (quantidadeFinal == 0){
-                    System.out.println("OK - exatamente 1 exemplar foi consumido.");
+                if (quantidadeFinal == 1){
+                    System.out.println("OK - estoque devolvido exatamente uma vez (voltou a 1).");
                 }else {
-                    System.out.println("SUSPEITO - esperado 0, veio " + quantidadeFinal);
+                    System.out.println("SUSPEITO - esperado 1, veio " + quantidadeFinal);
                 }
             }
         }
 
         try (Connection conn = ConexaoFactory.getInstance().getConexao();
-        PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM emprestimo WHERE livro_id = ?")) {
-            stmt.setInt(1, livro.getId());
+        PreparedStatement stmt = conn.prepareStatement("SELECT emprestimo.status, emprestimo.data_devolucao FROM emprestimo WHERE id = ?")) {
+            stmt.setInt(1, emprestimo.getId());
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.next();
-                int totalEmprestimo = rs.getInt(1);
-                System.out.println("Total de linhas em empréstimo para esse livro: " + totalEmprestimo);
-                if (totalEmprestimo == 1){
-                    System.out.println("OK - só 1 empréstimo foi de fato gravado.");
+                String status = rs.getString("status");
+                java.sql.Date dataDevolucao = rs.getDate("data_devolucao");
+                System.out.println("status final no banco: " + status + " | data_devolucao: " + dataDevolucao);
+                if ("DEVOLVIDO".equals(status) && dataDevolucao != null) {
+                    System.out.println("OK - empréstimo marcado como devolvido, com data gravada.");
                 }else {
-                    System.out.println("SUSPEITO - esperado 1, veio " + totalEmprestimo);
+                    System.out.println("SUSPEITO - status/data inconsistentes.");
                 }
             }
         }
