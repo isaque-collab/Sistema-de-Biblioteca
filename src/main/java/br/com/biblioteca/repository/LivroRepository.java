@@ -139,6 +139,16 @@ public class LivroRepository {
         }
     }
 
+    public boolean aumentarEstoque(int livroId, Connection conn) throws SQLException {
+        String sql = "UPDATE livro SET quantidade_disponivel = quantidade_disponivel + 1 " +
+                "WHERE id = ? AND quantidade_disponivel < quantidade_total";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, livroId);
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+        }
+    }
+
     private Livro mapear(ResultSet rs) throws SQLException {
         return Livro.builder()
                 .id(rs.getInt("id"))
