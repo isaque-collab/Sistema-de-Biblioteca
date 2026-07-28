@@ -7,13 +7,16 @@ import br.com.biblioteca.model.Emprestimo;
 import br.com.biblioteca.repository.EmprestimoRepository;
 import br.com.biblioteca.repository.LivroRepository;
 import br.com.biblioteca.repository.UsuarioRepository;
+import br.com.biblioteca.strategy.CalculadoraMulta;
 import br.com.biblioteca.util.ConexaoFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class EmprestimoService {
@@ -23,12 +26,14 @@ public class EmprestimoService {
     private final EmprestimoRepository emprestimoRepository;
     private final LivroRepository livroRepository;
     private final UsuarioRepository usuarioRepository;
+    private final CalculadoraMulta calculadoraMulta;
 
     public EmprestimoService(EmprestimoRepository emprestimoRepository, LivroRepository livroRepository,
-                             UsuarioRepository usuarioRepository) {
+                             UsuarioRepository usuarioRepository, CalculadoraMulta calculadoraMulta) {
         this.emprestimoRepository = emprestimoRepository;
         this.livroRepository = livroRepository;
         this.usuarioRepository = usuarioRepository;
+        this.calculadoraMulta = calculadoraMulta;
     }
 
     public Emprestimo emprestar(int usuarioId, int livroId, LocalDate dataPrevistaDevolucao){
@@ -121,5 +126,19 @@ public class EmprestimoService {
             return SituacaoEmprestimo.ATRASADO;
         }
         return SituacaoEmprestimo.ATIVO;
+    }
+
+    public BigDecimal calcularMulta(Emprestimo emprestimo, LocalDate dataReferencia){
+        if (emprestimo == null){
+            throw new IllegalArgumentException("Empréstimo não pode ser nulo.");
+        }
+        if (dataReferencia == null){
+            throw new IllegalArgumentException("Data de Referência não pode ser nula.");
+        }
+        long diasAtraso = ChronoUnit.DAYS.between(emprestimo.getDataPrevistaDevolucao(), dataReferencia);
+        if (diasAtraso < 0){
+            throw new IllegalArgumentException("Dias de atraso não pode ser negativos.");
+        }
+        return calculadoraMulta.calcular(diasAtraso);
     }
 }
