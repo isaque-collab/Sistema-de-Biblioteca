@@ -1,6 +1,7 @@
 package br.com.biblioteca.enums;
 
-public enum StatusEmprestimo {
+public enum SituacaoEmprestimo {
     ATIVO,
+    ATRASADO,
     DEVOLVIDO
 }
