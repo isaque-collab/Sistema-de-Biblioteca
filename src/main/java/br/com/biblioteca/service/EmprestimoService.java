@@ -80,6 +80,50 @@ public class EmprestimoService {
         }
     }
 
+    public Emprestimo devolver(int emprestimoId){
+        try (Connection conn = ConexaoFactory.getInstance().getConexao()){
+            conn.setAutoCommit(false);
+
+            try {
+                Emprestimo emprestimo = emprestimoRepository.buscarPorId(emprestimoId, conn)
+                        .orElseThrow(() -> new EmprestimoNaoEncontradoException(emprestimoId));
+
+                LocalDate dataDevolucao = LocalDate.now();
+
+                boolean statusAtualizado = emprestimoRepository.registrarDevolucao(emprestimoId, dataDevolucao, conn);
+                if (!statusAtualizado){
+                    throw new EmprestimoJaDevolvidoException(emprestimoId);
+                }
+
+                boolean estoqueAtualizado = livroRepository.aumentarEstoque(emprestimo.getLivroId(), conn);
+                if (!estoqueAtualizado){
+                    log.error("Invariante quebrado: falha ao devolver estoque do livro id {} "
+                    +
+                    "no empréstimo id {} (estoque já no máximo)", emprestimo.getLivroId(), emprestimoId);
+                    throw new PersistenciaException("Falha ao atualizar estoque do livro id: " + emprestimo.getLivroId());
+                }
+
+                emprestimo.setStatus(StatusEmprestimo.DEVOLVIDO);
+                emprestimo.setDataDevolucao(dataDevolucao);
+
+                conn.commit();
+                return emprestimo;
+
+            }catch (RuntimeException | SQLException e){
+                conn.rollback();
+                if (e instanceof RuntimeException){
+                    throw (RuntimeException) e;
+                }
+                log.error("Erro ao registrar devolução", e);
+                throw new PersistenciaException("Erro ao registrar devolução", e);
+            }
+
+        }catch (SQLException e){
+            log.error("Erro de conexão ao registrar devolução", e);
+            throw new PersistenciaException("Erro de conexão ao registrar devolução", e);
+        }
+    }
+
     public Emprestimo buscarPorId(int id){
         try {
             return emprestimoRepository.buscarPorId(id)
