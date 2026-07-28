@@ -4,8 +4,10 @@ import br.com.biblioteca.exception.EstoqueIndisponivelException;
 import br.com.biblioteca.model.*;
 import br.com.biblioteca.repository.*;
 import br.com.biblioteca.service.*;
+import br.com.biblioteca.strategy.MultaComCarenciaStrategy;
 import br.com.biblioteca.util.ConexaoFactory;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,7 +30,8 @@ public class ConcorrenciaEmprestimoManualTest {
         LivroService livroService = new LivroService(livroRepository);
         UsuarioService usuarioService = new UsuarioService(usuarioRepository);
         EmprestimoService emprestimoService =
-                new EmprestimoService(emprestimoRepository, livroRepository, usuarioRepository);
+                new EmprestimoService(emprestimoRepository, livroRepository, usuarioRepository, new MultaComCarenciaStrategy(
+                        new BigDecimal("2.00"), 3));
 
         Autor autor = autorService.cadastrar(
                 Autor.builder().nome("Autor Teste Concorrencia " + System.nanoTime()).build());
