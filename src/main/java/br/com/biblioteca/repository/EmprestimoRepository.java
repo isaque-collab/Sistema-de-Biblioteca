@@ -5,6 +5,7 @@ import br.com.biblioteca.model.Emprestimo;
 import br.com.biblioteca.util.ConexaoFactory;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -70,6 +71,17 @@ public class EmprestimoRepository {
             }
         }
         return emprestimos;
+    }
+
+    public boolean registrarDevolucao(int emprestimoId, LocalDate dataDevolucao, Connection conn) throws SQLException {
+        String sql = "UPDATE emprestimo SET status = 'DEVOLVIDO', data_devolucao = ? " +
+                "WHERE id = ? AND status = 'ATIVO'";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setDate(1, Date.valueOf(dataDevolucao));
+            stmt.setInt(2, emprestimoId);
+            int linhasAfetadas = stmt.executeUpdate();
+            return linhasAfetadas > 0;
+        }
     }
 
 
