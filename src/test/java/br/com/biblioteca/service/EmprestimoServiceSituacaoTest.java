@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EmprestimoServiceSituacaoTest {
 
-    private final EmprestimoService service = new EmprestimoService(null,null,null);
+    private final EmprestimoService service = new EmprestimoService(null,null,null, null);
 
     private Emprestimo criarEmprestimo(StatusEmprestimo status, LocalDate dataPrevistaDevolucao){
         return Emprestimo.builder()
@@ -72,5 +72,41 @@ class EmprestimoServiceSituacaoTest {
         Emprestimo emprestimo = criarEmprestimo(StatusEmprestimo.ATIVO, LocalDate.of(2026, 8, 1));
 
         assertThrows(IllegalArgumentException.class, () -> service.determinarSituacao(emprestimo,null));
+    }
+
+    private static class CalculadoraMultaFake implements br.com.biblioteca.strategy.CalculadoraMulta{
+        long diasRecebidos;
+
+        @Override
+        public java.math.BigDecimal calcular(long diasAtraso) {
+            this.diasRecebidos = diasAtraso;
+            return java.math.BigDecimal.valueOf(diasAtraso);
+        }
+    }
+
+    @Test
+    void calcularMultaPassaDiasAtrasoCorretosParaEstrategia(){
+        CalculadoraMultaFake fake = new CalculadoraMultaFake();
+        EmprestimoService serviceComFake = new EmprestimoService(null, null, null, fake);
+        Emprestimo emprestimo = criarEmprestimo(StatusEmprestimo.ATIVO, LocalDate.of(2026, 7, 20));
+
+        serviceComFake.calcularMulta(emprestimo, LocalDate.of(2026, 7, 27));
+
+        assertEquals(7, fake.diasRecebidos);
+    }
+
+    @Test
+    void calcularMultaComEmprestimoNuloLancaIllegalArgumentException(){
+        EmprestimoService serviceComFake = new EmprestimoService(null, null, null, new CalculadoraMultaFake());
+
+        assertThrows(IllegalArgumentException.class, () -> serviceComFake.calcularMulta(null, LocalDate.of(2026, 7, 27)));
+    }
+
+    @Test
+    void calcularMultaComDataReferenciaNulaLancaIllegalArgumentException(){
+        EmprestimoService serviceComFake = new EmprestimoService(null, null, null, new CalculadoraMultaFake());
+        Emprestimo emprestimo = criarEmprestimo(StatusEmprestimo.ATIVO, LocalDate.of(2026, 7, 20));
+
+        assertThrows(IllegalArgumentException.class, () -> serviceComFake.calcularMulta(emprestimo, null));
     }
 }
