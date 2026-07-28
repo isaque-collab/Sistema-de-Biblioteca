@@ -1,5 +1,6 @@
 package br.com.biblioteca.service;
 
+import br.com.biblioteca.enums.SituacaoEmprestimo;
 import br.com.biblioteca.enums.StatusEmprestimo;
 import br.com.biblioteca.exception.*;
 import br.com.biblioteca.model.Emprestimo;
@@ -91,5 +92,34 @@ public class EmprestimoService {
             log.error("Erro ao listar empréstimos", e);
             throw new PersistenciaException("Erro ao listar empréstimos", e);
         }
+    }
+
+    /**
+     * Determina a situação atual de um empréstimo.
+     *
+     * A precedência das regras é:
+     * 1. Empréstimos devolvidos sempre possuem situação DEVOLVIDO.
+     * 2. Empréstimos ativos cuja data prevista já passou possuem situação ATRASADO.
+     * 3. Caso contrário, a situação é ATIVO.
+     *
+     * @param emprestimo empréstimo analisado
+     * @param dataReferencia data utilizada para a verificação
+     * @return situação calculada do empréstimo
+     */
+
+    public SituacaoEmprestimo determinarSituacao(Emprestimo emprestimo, LocalDate dataReferencia){
+        if (emprestimo == null){
+            throw new IllegalArgumentException("emprestimo não pode ser nulo.");
+        }
+        if (dataReferencia == null){
+            throw new IllegalArgumentException("dataReferencia não pode ser nula.");
+        }
+        if (emprestimo.getStatus() == StatusEmprestimo.DEVOLVIDO){
+            return SituacaoEmprestimo.DEVOLVIDO;
+        }
+        if (dataReferencia.isAfter(emprestimo.getDataPrevistaDevolucao())){
+            return SituacaoEmprestimo.ATRASADO;
+        }
+        return SituacaoEmprestimo.ATIVO;
     }
 }
