@@ -1,9 +1,8 @@
-package br.com.biblioteca.manual.service;
+package br.com.biblioteca.service;
 
 import br.com.biblioteca.enums.SituacaoEmprestimo;
 import br.com.biblioteca.enums.StatusEmprestimo;
 import br.com.biblioteca.model.Emprestimo;
-import br.com.biblioteca.service.EmprestimoService;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
