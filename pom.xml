@@ -75,11 +75,33 @@
                 </configuration>
             </plugin>
 
-            <!-- Executa os testes -->
+            <!-- Executa os testes unitários (mvn test). Exclui *IT.java explicitamente: testes de integração (que
+             exigem MySQL) rodam só via Failsafe, em mvn verify.-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.6.0-M1</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*IT.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Executa os testes de integração (mvn verify), ex.: EmprestimoServiceDevolucaoIT - precisa de MySQL
+            local rodando com as credenciais de ConexaoFactory. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.5.6</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>
