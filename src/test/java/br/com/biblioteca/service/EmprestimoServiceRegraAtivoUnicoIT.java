@@ -122,8 +122,8 @@ class EmprestimoServiceRegraAtivoUnicoIT {
     private static int digitoVerificador(int[] digitos, int pesoInicial){
         int soma = 0;
         int peso = pesoInicial;
-        for (int i = 0; i < pesoInicial; i++) {
-            soma += digitos[i] * peso;
+        for (int digito : digitos) {
+            soma += digito * peso;
             peso--;
         }
         int resto = soma % 11;
