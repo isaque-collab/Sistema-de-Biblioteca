@@ -47,6 +47,10 @@ public class EmprestimoService {
                 livroRepository.buscarPorId(livroId, conn)
                         .orElseThrow(() -> new LivroNaoEncontradoException(livroId));
 
+                if (emprestimoRepository.existeEmprestimoAtivo(usuarioId, livroId, conn)){
+                    throw new EmprestimoAtivoExistenteException(usuarioId, livroId);
+                }
+
                 boolean linhasAfetada = livroRepository.diminuirEstoque(livroId, conn);
                 if (!linhasAfetada){
                     throw new EstoqueIndisponivelException(livroId);
