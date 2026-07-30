@@ -84,6 +84,24 @@ public class EmprestimoRepository {
         }
     }
 
+    public boolean existeEmprestimoAtivo(int usuarioId, int livroId) throws SQLException {
+        try (Connection conn = ConexaoFactory.getInstance().getConexao()){
+            return existeEmprestimoAtivo(usuarioId, livroId, conn);
+        }
+    }
+
+    public boolean existeEmprestimoAtivo(int usuarioId, int livroId, Connection conn) throws SQLException {
+        String sql = "SELECT 1 FROM emprestimo WHERE usuario_id = ? AND livro_id = ? AND status = ? LIMIT 1";
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, usuarioId);
+            stmt.setInt(2, livroId);
+            stmt.setString(3, StatusEmprestimo.ATIVO.name());
+            try (ResultSet rs = stmt.executeQuery()){
+                return rs.next();
+            }
+        }
+    }
+
 
     private Emprestimo mapear(ResultSet rs) throws SQLException {
         Date dataDevolucao = rs.getDate("data_devolucao");
