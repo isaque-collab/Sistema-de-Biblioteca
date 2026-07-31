@@ -18,7 +18,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -203,5 +205,28 @@ public class EmprestimoService {
         }
         long diasAtraso = ChronoUnit.DAYS.between(emprestimo.getDataPrevistaDevolucao(), dataReferencia);
         return calculadoraMulta.calcular(diasAtraso);
+    }
+
+    public Map<Integer, BigDecimal> calcularMultasProjetadasPorUsuario(LocalDate dataReferencia) throws SQLException{
+        List<Emprestimo> emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+
+        Map<Integer, BigDecimal> multasPorUsuario = new HashMap<>();
+
+        for (Emprestimo e :  emprestimosAtivos){
+            if (determinarSituacao(e, dataReferencia) !=  SituacaoEmprestimo.ATRASADO){
+                continue;
+            }
+
+            long diasAtraso = ChronoUnit.DAYS.between(e.getDataPrevistaDevolucao(), dataReferencia);
+            BigDecimal multa = calculadoraMulta.calcular(diasAtraso);
+
+            multasPorUsuario.merge(
+                    e.getUsuarioId(),
+                    multa,
+                    BigDecimal::add
+            );
+        }
+
+        return multasPorUsuario;
     }
 }
