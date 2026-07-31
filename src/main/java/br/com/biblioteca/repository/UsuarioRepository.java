@@ -4,9 +4,7 @@ import br.com.biblioteca.model.Usuario;
 import br.com.biblioteca.util.ConexaoFactory;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class UsuarioRepository {
     public void salvar(Usuario usuario) throws SQLException{
@@ -48,6 +46,35 @@ public class UsuarioRepository {
             }
 
         }
+    }
+
+    public List<Usuario> buscarPorIds(Collection<Integer> ids) throws SQLException{
+        try(Connection conn = ConexaoFactory.getInstance().getConexao()){
+           return buscarPorIds(ids, conn);
+        }
+    }
+
+    public List<Usuario> buscarPorIds(Collection<Integer> ids, Connection conn) throws SQLException{
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?") );
+        String sql = "SELECT * FROM usuario WHERE id IN (" + placeholders + ")";
+
+        List<Usuario> usuarios = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int index = 1;
+            for (Integer id : ids) {
+                stmt.setInt(index++, id);
+            }
+            try(ResultSet rs = stmt.executeQuery()){
+                while (rs.next()) {
+                    usuarios.add(mapear(rs));
+                }
+            }
+        }
+        return usuarios;
     }
 
     public Optional<Usuario> buscarPorCpf(String cpf) throws SQLException{
