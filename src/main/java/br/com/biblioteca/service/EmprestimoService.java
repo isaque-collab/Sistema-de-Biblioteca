@@ -229,4 +229,11 @@ public class EmprestimoService {
 
         return multasPorUsuario;
     }
+
+    public BigDecimal valorTotalMultasProjetadas(LocalDate dataReferencia) throws SQLException{
+        return calcularMultasProjetadasPorUsuario(dataReferencia)
+                .values()
+                .stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }
