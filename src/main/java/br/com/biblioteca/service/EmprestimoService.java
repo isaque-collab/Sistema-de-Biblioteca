@@ -102,8 +102,8 @@ public class EmprestimoService {
                 boolean estoqueAtualizado = livroRepository.aumentarEstoque(emprestimo.getLivroId(), conn);
                 if (!estoqueAtualizado){
                     log.error("Invariante quebrado: falha ao devolver estoque do livro id {} "
-                    +
-                    "no empréstimo id {} (estoque já no máximo)", emprestimo.getLivroId(), emprestimoId);
+                            +
+                            "no empréstimo id {} (estoque já no máximo)", emprestimo.getLivroId(), emprestimoId);
                     throw new PersistenciaException("Falha ao atualizar estoque do livro id: " + emprestimo.getLivroId());
                 }
 
@@ -184,9 +184,6 @@ public class EmprestimoService {
             throw new IllegalArgumentException("Data de Referência não pode ser nula.");
         }
         long diasAtraso = ChronoUnit.DAYS.between(emprestimo.getDataPrevistaDevolucao(), dataReferencia);
-        if (diasAtraso < 0){
-            throw new IllegalArgumentException("Dias de atraso não pode ser negativos.");
-        }
         return calculadoraMulta.calcular(diasAtraso);
     }
 }
