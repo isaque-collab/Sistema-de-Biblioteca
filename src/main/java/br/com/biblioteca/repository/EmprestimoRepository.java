@@ -73,6 +73,27 @@ public class EmprestimoRepository {
         return emprestimos;
     }
 
+    public List<Emprestimo> buscarPorStatus(StatusEmprestimo statusEmprestimo) throws SQLException {
+        try(Connection conn = ConexaoFactory.getInstance().getConexao()){
+            return buscarPorStatus(statusEmprestimo, conn);
+        }
+    }
+
+    public List<Emprestimo> buscarPorStatus(StatusEmprestimo statusEmprestimo, Connection conn) throws SQLException{
+        String sql = "SELECT * FROM emprestimo WHERE status = ?";
+        List<Emprestimo> emprestimos = new ArrayList<>();
+        try(PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, statusEmprestimo.name());
+
+            try (ResultSet rs = stmt.executeQuery()){
+                while (rs.next()) {
+                    emprestimos.add(mapear(rs));
+                }
+            }
+        }
+        return emprestimos;
+    }
+
     public boolean registrarDevolucao(int emprestimoId, LocalDate dataDevolucao, Connection conn) throws SQLException {
         String sql = "UPDATE emprestimo SET status = 'DEVOLVIDO', data_devolucao = ? " +
                 "WHERE id = ? AND status = 'ATIVO'";
