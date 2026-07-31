@@ -1,6 +1,8 @@
-# Sistema de Biblioteca (Em desenvolvimento)
+# Sistema de Biblioteca
 
 Sistema de gerenciamento de biblioteca desenvolvido em **Java**, utilizando **JDBC**, **MySQL**, **Docker** e arquitetura em camadas.
+
+> **Status:** Em desenvolvimento (Etapa 7 concluída)
 
 O projeto está sendo desenvolvido como peça de portfólio com o objetivo de aplicar conceitos utilizados no desenvolvimento back-end de aplicações reais, priorizando organização do código, separação de responsabilidades, regras de negócio, tratamento de exceções e boas práticas de programação.
 
@@ -64,16 +66,17 @@ Durante o desenvolvimento são praticados conceitos como:
 - Controle de estoque
 - Exclusão
 
-## Empréstimos (em desenvolvimento)
+## Empréstimos
 
 - Registro de empréstimos
-- Controle transacional utilizando JDBC
-- Atualização automática do estoque
-- Controle de concorrência para evitar empréstimos simultâneos do último exemplar
+- Registro de devoluções
 - Consulta por ID
 - Listagem completa
-- Registro de devoluções (planejado)
-- Controle de multas (planejado)
+- Controle transacional utilizando JDBC
+- Atualização automática do estoque
+- Controle de concorrência para empréstimos e devoluções
+- Cálculo de multas utilizando Strategy Pattern
+- Determinação da situação do empréstimo (Ativo, Devolvido ou Atrasado)
 - Histórico de empréstimos (planejado)
 
 ## Relatórios (planejado)
@@ -97,7 +100,7 @@ Durante o desenvolvimento são praticados conceitos como:
 - Docker
 - Lombok
 - Log4j2
-- JUnit 5 (planejado)
+- JUnit 5
 
 ---
 
@@ -256,6 +259,31 @@ Retorna o livro cadastrado.
 6. Confirma a transação (`commit`).
 7. Em caso de falha, desfaz todas as alterações (`rollback`).
 
+---
+
+## Registro de devolução
+
+### Processamento
+
+1. Localiza o empréstimo.
+2. Verifica se ele ainda está ativo.
+3. Inicia uma transação JDBC.
+4. Atualiza o status do empréstimo para DEVOLVIDO.
+5. Atualiza o estoque do livro.
+6. Calcula a multa conforme a estratégia configurada.
+7. Confirma a transação (`commit`).
+8. Em caso de erro realiza `rollback`.
+
+### Saída
+
+Retorna o empréstimo atualizado juntamente com o valor da multa.
+
+### Possíveis exceções
+
+- EmprestimoNaoEncontradoException
+- EmprestimoJaDevolvidoException
+- PersistenciaException
+
 ### Saída
 
 Retorna o empréstimo registrado.
@@ -352,9 +380,11 @@ Retorna o empréstimo registrado.
 ### EmprestimoRepository
 
 - Cadastro de empréstimos
+- Registro de devoluções
 - Consulta por ID
 - Listagem completa
-- Suporte a transações compartilhando a mesma `Connection`
+- Atualizações atômicas
+- Suporte a transações compartilhando a mesma Connection
 
 ## Camada Service
 
@@ -402,9 +432,12 @@ Retorna o empréstimo registrado.
 ### EmprestimoService
 
 - Registro de empréstimos
+- Registro de devoluções
 - Controle de transações JDBC
 - Atualização automática do estoque
 - Controle de concorrência
+- Cálculo de multas
+- Determinação da situação do empréstimo
 - Tratamento de exceções
 
 ## Validator
@@ -413,6 +446,11 @@ Retorna o empréstimo registrado.
 - EmailValidator
 - IsbnValidator
 - NomeValidator
+
+## Padrões de Projeto
+
+- Singleton — gerenciamento da conexão com o banco (`ConexaoFactory`)
+- Strategy — cálculo de multas por atraso
 
 ## Exception
 
@@ -430,16 +468,17 @@ Atualmente está configurado para:
 
 ## Testes
 
-Foi desenvolvido um teste manual de concorrência para validar o comportamento das transações durante o registro de empréstimos.
+O projeto utiliza **JUnit 5** para testes unitários e de integração.
 
-O teste simula duas threads tentando emprestar simultaneamente o último exemplar de um mesmo livro.
+Atualmente foram implementados testes para:
 
-Resultado esperado:
+- Estratégias de cálculo de multa;
+- Determinação da situação do empréstimo;
+- Fluxo de devolução;
+- Fluxo completo de empréstimo e devolução;
+- Controle de concorrência durante empréstimos.
 
-- Apenas um empréstimo é registrado.
-- A segunda tentativa recebe `EstoqueIndisponivelException`.
-- O estoque permanece consistente.
-- Não ocorre condição de corrida (Race Condition).
+Os testes de integração permitiram identificar e corrigir um bug real no cálculo de multas, reforçando a importância da validação de cenários completos além da cobertura de código.
 
 ---
 
@@ -473,7 +512,8 @@ Isso permite recriar todo o banco de dados apenas executando um único arquivo S
 - As regras de negócio permanecem concentradas na camada Service.
 - O banco de dados é responsável pela integridade referencial e pelas constraints.
 - Violações de constraints do banco são traduzidas para exceções específicas da aplicação.
-- O cálculo de multas será implementado utilizando o Strategy Pattern.
+- O cálculo de multas foi implementado utilizando o Strategy Pattern, permitindo adicionar novas regras sem alterar a lógica da aplicação.
+- A situação do empréstimo (Ativo, Atrasado ou Devolvido) é determinada dinamicamente, evitando persistência de estados derivados no banco de dados.
 - O `IsbnValidator` valida ISBN-10 e ISBN-13, porém não realiza conversão entre os formatos para manter o escopo da primeira versão do projeto.
 - O controle de concorrência no empréstimo é realizado através de uma atualização atômica do estoque, garantindo consistência mesmo com acessos simultâneos.
 
@@ -500,21 +540,22 @@ src
 │   │       ├── util
 │   │       └── validator
 │   └── resources
-└── test
-    └── java
-        └── br.com.biblioteca
-            └── manual
+test
+└── java
+    ├── integration
+    ├── service
+    ├── strategy
+    └── manual
 ```
 
 ---
 
 # Próximas etapas
 
-- Implementar devolução de livros.
-- Desenvolver o cálculo de multas utilizando Strategy Pattern.
-- Criar relatórios da biblioteca.
-- Desenvolver interface CLI.
-- Implementar testes automatizados com JUnit 5.
+- Desenvolver os relatórios da biblioteca.
+- Construir a interface CLI.
+- Expandir a cobertura dos testes automatizados.
+- Adicionar novos indicadores e estatísticas para os relatórios.
 
 ---
 
