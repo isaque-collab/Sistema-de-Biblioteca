@@ -4,6 +4,7 @@ import br.com.biblioteca.enums.SituacaoEmprestimo;
 import br.com.biblioteca.enums.StatusEmprestimo;
 import br.com.biblioteca.exception.*;
 import br.com.biblioteca.model.Emprestimo;
+import br.com.biblioteca.model.Usuario;
 import br.com.biblioteca.repository.EmprestimoRepository;
 import br.com.biblioteca.repository.LivroRepository;
 import br.com.biblioteca.repository.UsuarioRepository;
@@ -18,6 +19,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class EmprestimoService {
 
@@ -145,6 +148,21 @@ public class EmprestimoService {
             log.error("Erro ao listar empréstimos", e);
             throw new PersistenciaException("Erro ao listar empréstimos", e);
         }
+    }
+
+    public List<Usuario> usuariosComEmprestimosEmAtraso(LocalDate dataReferencia) throws SQLException{
+        List<Emprestimo> emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+
+        Set<Integer> usuariosIds = emprestimosAtivos.stream()
+                .filter(e -> determinarSituacao(e, dataReferencia) == SituacaoEmprestimo.ATRASADO)
+                .map(Emprestimo::getUsuarioId)
+                .collect(Collectors.toSet());
+
+        if (usuariosIds.isEmpty()){
+            return List.of();
+        }
+
+        return usuarioRepository.buscarPorIds(usuariosIds);
     }
 
     /**
