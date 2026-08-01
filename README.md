@@ -2,7 +2,7 @@
 
 Sistema de gerenciamento de biblioteca desenvolvido em **Java**, utilizando **JDBC**, **MySQL**, **Docker** e arquitetura em camadas.
 
-> **Status:** Em desenvolvimento (Etapa 7 concluída)
+> **Status:** Em desenvolvimento (Etapa 8 concluída)
 
 O projeto está sendo desenvolvido como peça de portfólio com o objetivo de aplicar conceitos utilizados no desenvolvimento back-end de aplicações reais, priorizando organização do código, separação de responsabilidades, regras de negócio, tratamento de exceções e boas práticas de programação.
 
@@ -77,15 +77,26 @@ Durante o desenvolvimento são praticados conceitos como:
 - Controle de concorrência para empréstimos e devoluções
 - Cálculo de multas utilizando Strategy Pattern
 - Determinação da situação do empréstimo (Ativo, Devolvido ou Atrasado)
-- Histórico de empréstimos (planejado)
+- Relatórios de empréstimos atrasados
+- Identificação de usuários com empréstimos em atraso
+- Cálculo de multas projetadas por usuário
+- Cálculo do total de multas projetadas
 
-## Relatórios (planejado)
+## Relatórios
+
+## Relatórios implementados
+
+- Usuários com empréstimos atrasados
+- Multas projetadas por usuário
+- Total de multas projetadas
+
+
+## Relatórios planejados
 
 - Livros mais emprestados
-- Usuários com empréstimos ativos
+- Usuários com mais empréstimos
 - Usuários inadimplentes
 - Ranking de devedores
-- Total arrecadado em multas
 - Estatísticas gerais
 
 ---
@@ -477,8 +488,12 @@ Atualmente foram implementados testes para:
 - Fluxo de devolução;
 - Fluxo completo de empréstimo e devolução;
 - Controle de concorrência durante empréstimos.
+- Relatórios de atraso e multas projetadas;
+- Cenários dentro e fora da carência;
+- Validação de resultados vazios quando não existem atrasos.
 
 Os testes de integração permitiram identificar e corrigir um bug real no cálculo de multas, reforçando a importância da validação de cenários completos além da cobertura de código.
+Além disso, a criação dos dados utilizados nos testes de integração é centralizada através de uma `TestDataFactory`, reduzindo duplicação e facilitando a manutenção da suíte de testes.
 
 ---
 
@@ -516,6 +531,7 @@ Isso permite recriar todo o banco de dados apenas executando um único arquivo S
 - A situação do empréstimo (Ativo, Atrasado ou Devolvido) é determinada dinamicamente, evitando persistência de estados derivados no banco de dados.
 - O `IsbnValidator` valida ISBN-10 e ISBN-13, porém não realiza conversão entre os formatos para manter o escopo da primeira versão do projeto.
 - O controle de concorrência no empréstimo é realizado através de uma atualização atômica do estoque, garantindo consistência mesmo com acessos simultâneos.
+- Os relatórios que dependem de regras de negócio (como multas projetadas) são calculados na camada Service, mantendo a lógica fora do banco de dados.
 
 ---
 
@@ -542,20 +558,21 @@ src
 │   └── resources
 test
 └── java
-    ├── integration
     ├── service
     ├── strategy
-    └── manual
+    ├── manual
+    └── util
+        └── TestDataFactory
 ```
 
 ---
 
 # Próximas etapas
 
-- Desenvolver os relatórios da biblioteca.
-- Construir a interface CLI.
+- Implementar relatórios analíticos utilizando consultas SQL;
+- Criar rankings e estatísticas da biblioteca;
+- Construir a interface CLI;
 - Expandir a cobertura dos testes automatizados.
-- Adicionar novos indicadores e estatísticas para os relatórios.
 
 ---
 
