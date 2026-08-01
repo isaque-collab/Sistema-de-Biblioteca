@@ -216,33 +216,39 @@ public class EmprestimoService {
     }
 
     public Map<Usuario, BigDecimal> calcularMultasProjetadasPorUsuario(LocalDate dataReferencia){
-        List<Emprestimo> emprestimosAtivos = new ArrayList<>();
         try {
-           emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+            List<Emprestimo> emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+            Map<Integer, BigDecimal> multasPorUsuario = new HashMap<>();
+
+            for (Emprestimo emprestimo : emprestimosAtivos) {
+                if (determinarSituacao(emprestimo, dataReferencia) != SituacaoEmprestimo.ATRASADO){
+                    continue;
+                }
+
+                BigDecimal multa = calcularMulta(emprestimo, dataReferencia);
+
+                if (multa.compareTo(BigDecimal.ZERO) > 0){
+                    multasPorUsuario.merge(emprestimo.getUsuarioId(),
+                            multa,
+                            BigDecimal::add);
+                }
+            }
+
+            if (multasPorUsuario.isEmpty()){
+                return Map.of();
+            }
+
+            List<Usuario> usuarios = usuarioRepository.buscarPorIds(multasPorUsuario.keySet());
+
+            Map<Usuario, BigDecimal> resultado = new LinkedHashMap<>();
+
+            for (Usuario usuario : usuarios){
+                resultado.put(usuario, multasPorUsuario.get(usuario.getId()));
+            }
+            return resultado;
         }catch (SQLException e){
-            throw new PersistenciaException("Não foi possível realizar a busca ", e);
+            throw new PersistenciaException("Erro ao calcular multas projetadas por usuários.", e);
         }
-
-
-        Map<Integer, BigDecimal> multasPorUsuario = new HashMap<>();
-
-        if (multasPorUsuario.isEmpty()){
-            return Map.of();
-        }
-
-        List<Usuario> usuarios = new ArrayList<>();
-        try {
-            usuarios = usuarioRepository.buscarPorIds(multasPorUsuario.keySet());
-        } catch (SQLException e) {
-            throw new PersistenciaException("Erro ao buscar usuários por ids", e);
-        }
-
-        Map<Usuario, BigDecimal> resultado = new LinkedHashMap<>();
-
-        for (Usuario usuario : usuarios){
-            resultado.put(usuario, multasPorUsuario.get(usuario.getId()));
-        }
-        return resultado;
     }
 
     public BigDecimal valorTotalMultasProjetadas(LocalDate dataReferencia) {
