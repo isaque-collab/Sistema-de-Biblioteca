@@ -7,6 +7,7 @@ import br.com.biblioteca.repository.*;
 import br.com.biblioteca.service.*;
 import br.com.biblioteca.strategy.MultaComCarenciaStrategy;
 import br.com.biblioteca.util.ConexaoFactory;
+import br.com.biblioteca.util.TestDataFactory;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -34,27 +35,18 @@ public class ConcorrenciaEmprestimoManualTest {
                 new EmprestimoService(emprestimoRepository, livroRepository, usuarioRepository, new MultaComCarenciaStrategy(
                         new BigDecimal("2.00"), 3));
 
+        TestDataFactory testDataFactory =
+                new TestDataFactory(autorService, categoriaService, livroService, usuarioService);
+
         Autor autor = autorService.cadastrar(
                 Autor.builder().nome("Autor Teste Concorrencia " + System.nanoTime()).build());
 
         Categoria categoria = categoriaService.cadastrar(
                 Categoria.builder().nome("Categoria Teste" + System.nanoTime()).build());
 
-        Livro livro = livroService.cadastrar(
-                Livro.builder()
-                        .titulo("Livro Para Devolver")
-                        .isbn(isbnAleatorioValido())
-                        .autorId(autor.getId())
-                        .categoriaId(categoria.getId())
-                        .quantidadeTotal(1)
-                        .build());
+        Livro livro = testDataFactory.criarLivroComEstoque(1);
 
-        Usuario usuario = usuarioService.cadastrar(
-                Usuario.builder()
-                        .nome("Usuario Devolução")
-                        .cpf(cpfValidoAleatorio())
-                        .email("usuario.devolucao" + System.nanoTime() + "@teste.com")
-                        .build());
+        Usuario usuario = testDataFactory.criarUsuario();
 
         Emprestimo emprestimo = emprestimoService.emprestar(
                 usuario.getId(), livro.getId(), LocalDate.now().plusDays(7));
@@ -145,43 +137,5 @@ public class ConcorrenciaEmprestimoManualTest {
                 }
             }
         }
-    }
-
-    private static String cpfValidoAleatorio() {
-        int[] base = new int[9];
-        java.util.Random r = new java.util.Random();
-        for (int i=0; i <9; i++) base[i] = r.nextInt(10);
-        int d1 = digitoVerificador(base, 10);
-        int[] comD1 = java.util.Arrays.copyOf(base, 10);
-        comD1[9] = d1;
-        int d2 = digitoVerificador(comD1, 11);
-        StringBuilder sb = new StringBuilder();
-        for (int d : base) sb.append(d);
-        sb.append(d1).append(d2);
-        return sb.toString();
-    }
-
-    private static int digitoVerificador(int[] digitos, int pesoInicial) {
-        int soma = 0;
-        int peso = pesoInicial;
-        for (int i = 0; i < pesoInicial - 1; i++) {
-            soma += digitos[i] * peso;
-            peso--;
-        }
-        int resto = soma % 11;
-        return (resto <2) ? 0 : 11 - resto;
-    }
-
-    private static String isbnAleatorioValido() {
-        java.util.Random r = new java.util.Random();
-        StringBuilder base = new StringBuilder("978");
-        for (int i = 0; i < 9; i++) base.append(r.nextInt(10));
-        int soma =0;
-        for (int i = 0; i < 12; i++){
-            int d = base.charAt(i) - '0';
-            soma += d * (i%2 == 0 ? 1 : 3);
-        }
-        int check = (10 - (soma %10)) %10;
-        return base.append(check).toString();
     }
 }
