@@ -18,10 +18,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class EmprestimoService {
@@ -152,8 +149,14 @@ public class EmprestimoService {
         }
     }
 
-    public List<Usuario> usuariosComEmprestimosEmAtraso(LocalDate dataReferencia) throws SQLException{
-        List<Emprestimo> emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+    public List<Usuario> usuariosComEmprestimosEmAtraso(LocalDate dataReferencia) {
+        List<Emprestimo> emprestimosAtivos = new ArrayList<>();
+        try {
+             emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+        }catch (SQLException e){
+            throw new PersistenciaException("Erro ao calcular multas projetadas por usuário.", e);
+        }
+
 
         Set<Integer> usuariosIds = emprestimosAtivos.stream()
                 .filter(e -> determinarSituacao(e, dataReferencia) == SituacaoEmprestimo.ATRASADO)
@@ -164,7 +167,12 @@ public class EmprestimoService {
             return List.of();
         }
 
-        return usuarioRepository.buscarPorIds(usuariosIds);
+
+        try {
+            return usuarioRepository.buscarPorIds(usuariosIds);
+        } catch (SQLException e) {
+            throw new PersistenciaException("Erro ao buscar usuários por ids", e);
+        }
     }
 
     /**
@@ -207,30 +215,37 @@ public class EmprestimoService {
         return calculadoraMulta.calcular(diasAtraso);
     }
 
-    public Map<Integer, BigDecimal> calcularMultasProjetadasPorUsuario(LocalDate dataReferencia) throws SQLException{
-        List<Emprestimo> emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+    public Map<Usuario, BigDecimal> calcularMultasProjetadasPorUsuario(LocalDate dataReferencia){
+        List<Emprestimo> emprestimosAtivos = new ArrayList<>();
+        try {
+           emprestimosAtivos = emprestimoRepository.buscarPorStatus(StatusEmprestimo.ATIVO);
+        }catch (SQLException e){
+            throw new PersistenciaException("Não foi possível realizar a busca ", e);
+        }
+
 
         Map<Integer, BigDecimal> multasPorUsuario = new HashMap<>();
 
-        for (Emprestimo e :  emprestimosAtivos){
-            if (determinarSituacao(e, dataReferencia) !=  SituacaoEmprestimo.ATRASADO){
-                continue;
-            }
-
-            long diasAtraso = ChronoUnit.DAYS.between(e.getDataPrevistaDevolucao(), dataReferencia);
-            BigDecimal multa = calculadoraMulta.calcular(diasAtraso);
-
-            multasPorUsuario.merge(
-                    e.getUsuarioId(),
-                    multa,
-                    BigDecimal::add
-            );
+        if (multasPorUsuario.isEmpty()){
+            return Map.of();
         }
 
-        return multasPorUsuario;
+        List<Usuario> usuarios = new ArrayList<>();
+        try {
+            usuarios = usuarioRepository.buscarPorIds(multasPorUsuario.keySet());
+        } catch (SQLException e) {
+            throw new PersistenciaException("Erro ao buscar usuários por ids", e);
+        }
+
+        Map<Usuario, BigDecimal> resultado = new LinkedHashMap<>();
+
+        for (Usuario usuario : usuarios){
+            resultado.put(usuario, multasPorUsuario.get(usuario.getId()));
+        }
+        return resultado;
     }
 
-    public BigDecimal valorTotalMultasProjetadas(LocalDate dataReferencia) throws SQLException{
+    public BigDecimal valorTotalMultasProjetadas(LocalDate dataReferencia) {
         return calcularMultasProjetadasPorUsuario(dataReferencia)
                 .values()
                 .stream()
