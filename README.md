@@ -84,20 +84,28 @@ Durante o desenvolvimento são praticados conceitos como:
 
 ## Relatórios
 
-## Relatórios implementados
+O módulo de relatórios foi dividido em duas categorias.
 
-- Usuários com empréstimos atrasados
-- Multas projetadas por usuário
-- Total de multas projetadas
+### Categoria A — Consultas analíticas (SQL)
 
+- Livros mais emprestados;
+- Usuários com mais empréstimos;
+- Empréstimos por categoria;
+- Total de empréstimos.
+
+### Categoria B — Regras de negócio
+
+- Usuários com empréstimos atrasados;
+- Multas projetadas por usuário;
+- Total de multas projetadas.
+
+---
 
 ## Relatórios planejados
 
-- Livros mais emprestados
-- Usuários com mais empréstimos
-- Usuários inadimplentes
-- Ranking de devedores
-- Estatísticas gerais
+- Ranking avançado de usuários;
+- Indicadores de utilização dos livros;
+- Novas métricas administrativas da biblioteca.
 
 ---
 
@@ -139,6 +147,7 @@ Cada camada possui uma responsabilidade específica.
 | Model | Representação das entidades |
 | Repository | Comunicação com o banco utilizando JDBC |
 | Service | Regras de negócio, validações e tratamento de exceções |
+| Relatórios | Consultas analíticas e geração de indicadores |
 | Validator | Validação e normalização dos dados |
 | Exception | Exceções específicas da aplicação |
 | Util | Classes utilitárias (ConexaoFactory, etc.) |
@@ -397,6 +406,13 @@ Retorna o empréstimo registrado.
 - Atualizações atômicas
 - Suporte a transações compartilhando a mesma Connection
 
+### RelatorioRepository
+
+- Livros mais emprestados
+- Usuários com mais empréstimos
+- Empréstimos por categoria
+- Total de empréstimos
+
 ## Camada Service
 
 ### UsuarioService
@@ -451,6 +467,29 @@ Retorna o empréstimo registrado.
 - Determinação da situação do empréstimo
 - Tratamento de exceções
 
+### RelatorioService
+
+- Geração de relatórios analíticos
+- Tratamento de exceções de persistência
+- Registro de erros utilizando Log4j2
+- Delegação das consultas para o RelatorioRepository
+
+## Módulo de Relatórios
+
+### Categoria A (Consultas SQL)
+
+- Livros mais emprestados
+- Usuários com mais empréstimos
+- Empréstimos por categoria
+- Total de empréstimos
+
+### Categoria B (Regras de negócio)
+
+- Usuários com empréstimos atrasados
+- Multas projetadas por usuário
+- Total de multas projetadas
+
+
 ## Validator
 
 - CpfValidator
@@ -489,6 +528,10 @@ Atualmente foram implementados testes para:
 - Fluxo completo de empréstimo e devolução;
 - Controle de concorrência durante empréstimos.
 - Relatórios de atraso e multas projetadas;
+- Relatórios analíticos utilizando consultas SQL;
+- Ranking de livros mais emprestados;
+- Ranking de usuários com maior quantidade de empréstimos;
+- Validação dos resultados agregados retornados pelo banco.
 - Cenários dentro e fora da carência;
 - Validação de resultados vazios quando não existem atrasos.
 
@@ -532,6 +575,9 @@ Isso permite recriar todo o banco de dados apenas executando um único arquivo S
 - O `IsbnValidator` valida ISBN-10 e ISBN-13, porém não realiza conversão entre os formatos para manter o escopo da primeira versão do projeto.
 - O controle de concorrência no empréstimo é realizado através de uma atualização atômica do estoque, garantindo consistência mesmo com acessos simultâneos.
 - Os relatórios que dependem de regras de negócio (como multas projetadas) são calculados na camada Service, mantendo a lógica fora do banco de dados.
+- Os relatórios analíticos foram separados entre consultas SQL e regras de negócio.
+    Relatórios baseados em agregações do banco permanecem na camada Repository, enquanto relatórios que dependem de regras da aplicação são processados na camada Service.
+- A separação entre Categoria A e Categoria B evita misturar responsabilidades e mantém o banco responsável por operações de agregação, enquanto a aplicação controla regras de domínio.
 
 ---
 
@@ -569,8 +615,7 @@ test
 
 # Próximas etapas
 
-- Implementar relatórios analíticos utilizando consultas SQL;
-- Criar rankings e estatísticas da biblioteca;
+- Expandir os relatórios analíticos com novos indicadores;
 - Construir a interface CLI;
 - Expandir a cobertura dos testes automatizados.
 
