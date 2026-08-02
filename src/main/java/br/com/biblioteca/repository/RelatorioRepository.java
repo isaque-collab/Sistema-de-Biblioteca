@@ -1,5 +1,6 @@
 package br.com.biblioteca.repository;
 
+import br.com.biblioteca.dto.relatorios.CategoriaEmprestimoResumo;
 import br.com.biblioteca.dto.relatorios.LivroEmprestimoResumo;
 import br.com.biblioteca.dto.relatorios.UsuarioEmprestimoResumo;
 import br.com.biblioteca.util.ConexaoFactory;
@@ -57,6 +58,33 @@ public class RelatorioRepository {
         ResultSet rs = stmt.executeQuery()){
             while(rs.next()){
                 resultado.add(new UsuarioEmprestimoResumo(
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getLong("quantidade_emprestimos")));
+            }
+        }
+        return resultado;
+    }
+
+    public List<CategoriaEmprestimoResumo> emprestimosPorCategoria() throws SQLException{
+        try (Connection conn = ConexaoFactory.getInstance().getConexao()){
+            return emprestimosPorCategoria(conn);
+        }
+    }
+
+    public List<CategoriaEmprestimoResumo> emprestimosPorCategoria(Connection conn) throws SQLException {
+        String sql = "SELECT c.id, c.nome, COUNT(e.id) AS quantidade_emprestimos " +
+                "FROM categoria c " +
+                "LEFT JOIN livro l ON l.categoria_id = c.id " +
+                "LEFT JOIN emprestimo e ON e.livro_id = l.id " +
+                "GROUP BY c.id, c.nome " +
+                "ORDER BY quantidade_emprestimos DESC, c.id ASC";
+
+        List<CategoriaEmprestimoResumo> resultado = new ArrayList<>();
+        try(PreparedStatement stmt = conn.prepareStatement(sql);
+        ResultSet rs = stmt.executeQuery()){
+            while(rs.next()){
+                resultado.add(new CategoriaEmprestimoResumo(
                         rs.getInt("id"),
                         rs.getString("nome"),
                         rs.getLong("quantidade_emprestimos")));
