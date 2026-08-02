@@ -93,4 +93,19 @@ public class RelatorioRepository {
         return resultado;
     }
 
+    public long totalDeEmprestimos() throws SQLException{
+        try (Connection conn = ConexaoFactory.getInstance().getConexao()){
+            return totalDeEmprestimos(conn);
+        }
+    }
+
+    public long totalDeEmprestimos(Connection conn) throws SQLException{
+        String sql = "SELECT COUNT(*) AS total FROM emprestimo";
+        try(PreparedStatement stmt = conn.prepareStatement(sql);
+        ResultSet rs = stmt.executeQuery()){
+            rs.next();
+            return rs.getLong("total");
+        }
+    }
+
 }
