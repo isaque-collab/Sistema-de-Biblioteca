@@ -1,5 +1,9 @@
 package br.com.biblioteca.util;
 
+import br.com.biblioteca.exception.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -8,8 +12,25 @@ import java.util.Scanner;
 public final class ConsoleUtil {
 
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final Logger log = LogManager.getLogger(ConsoleUtil.class);
 
     private ConsoleUtil(){
+    }
+
+    public static void executarAcao(Runnable acao){
+        try {
+            acao.run();
+        }catch (PersistenciaException e){
+            log.error("Erro de persistência", e);
+            exibirErro(e.getMessage());
+        }catch (ValidacaoException | RegistroNaoEncontradoException | RegistroDuplicadoException
+        | EstoqueIndisponivelException | EmprestimoAtivoExistenteException
+        | EmprestimoJaDevolvidoException e){
+            exibirErro(e.getMessage());
+        }catch (RuntimeException e){
+            log.error("Erro inesperado", e);
+            exibirErro("Ocorreu um erro inesperado. Consulte o log para mais detalhes.");
+        }
     }
 
     public static int lerOpcao(Scanner scanner, int min, int max){
