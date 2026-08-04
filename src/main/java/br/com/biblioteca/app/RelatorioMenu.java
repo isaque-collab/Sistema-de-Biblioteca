@@ -9,12 +9,16 @@ import br.com.biblioteca.service.RelatorioService;
 import br.com.biblioteca.util.ConsoleUtil;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
 public class RelatorioMenu {
+
+    private static final NumberFormat FORMATO_MOEDA = NumberFormat.getCurrencyInstance(Locale.of("pt", "BR"));
 
     private final RelatorioService relatorioService;
     private final EmprestimoService emprestimoService;
@@ -94,11 +98,11 @@ public class RelatorioMenu {
         if (multas.isEmpty()){
             System.out.println("Nenhuma multa projetada hoje.");
         }
-        multas.forEach((usuario, valor) -> System.out.println(usuario.getNome() + " - R$ " + valor));
+        multas.forEach((usuario, valor) -> System.out.println(usuario.getNome() + " - " + FORMATO_MOEDA.format(valor)));
     }
 
     private void valorTotalMultasProjetadas(){
         BigDecimal total = emprestimoService.valorTotalMultasProjetadas(LocalDate.now());
-        System.out.println("Valor total de multas projetadas hoje: R$ " + total);
+        System.out.println("Valor total de multas projetadas hoje: " + FORMATO_MOEDA.format(total));
     }
 }
